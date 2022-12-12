@@ -1,0 +1,6 @@
+app should be found in: /app
+all tests should be found in: /app/test
+
+test file format:
+
+action "url + urlquery" > res in json
