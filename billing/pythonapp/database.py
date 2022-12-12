@@ -11,24 +11,23 @@ class DataBase:
 
 
     def addProvider(self, name):
-        sql = "INSERT INTO Provider (id, name) VALUES (%d, %s)"
-        val = (name)
-        self.cursor.execute(sql, val)
+        sql = f"INSERT INTO Provider (name) VALUES ('{name}');"
+        self.cursor.execute(sql)
         self.connection.commit()
     
     
     def changeProviderName(self, id, new_name):
-        sql = f"UPDATE Provider SET name = '{new_name}' WHERE id = '{id}'"
+        sql = f"UPDATE Provider SET name='{new_name}' WHERE id='{id}';"
         self.cursor.execute(sql)
         self.connection.commit()
     
     def getProvidersCount(self):
-        self.cursor.execute("SELECT count(*) FROM Provider")
+        self.cursor.execute("SELECT count(*) FROM Provider;")
         result = self.cursor.fetchall()
         return result
             
     def GetProviderByName(self,name):
-        sql=f"SELECT * FROM Provider WHERE name = '{name}'"
+        sql=f"SELECT id FROM Provider WHERE name='{name}';"
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
         return result
