@@ -1,0 +1,33 @@
+version: '3'
+services:
+  app_weight:
+    build: .
+    networks:
+      - blue-net
+    depends_on:
+      my_data:
+        condition: service_healthy 
+
+  my_data:
+    build: ./my_sql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: weight
+    ports:
+      - "3306:3306"
+    volumes:
+      - weight_sql:/var/lib/mysql
+    networks:
+      - blue-net
+    healthcheck: # check the healthiness with the following configuration
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--user=root', '--password=root']
+      interval: 3s
+      timeout: 3s
+      retries: 15 
+ 
+networks:
+  blue-net:
+    
+
+volumes:
+  weight_sql:
