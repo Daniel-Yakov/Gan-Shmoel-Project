@@ -1,0 +1,26 @@
+version: '3.3'
+
+services:
+  pythonapp:
+    build: ./pythonapp/
+    ports:
+      - 8080:5000
+    volumes:
+      - ./pythonapp:/in
+    command: sh -c "sleep 10; python3 billing.py"
+    depends_on:
+      - mysql
+  mysql:
+    build: ./mysql/
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'billdb'
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql/
+
+volumes:
+  mysql-data:
+    driver: local

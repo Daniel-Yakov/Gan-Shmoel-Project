@@ -1,4 +1,5 @@
 from flask import Flask 
+import os
 from database import *
 
 app = Flask(__name__)
@@ -28,4 +29,4 @@ def ChangeName(id):
     
 
 if __name__=="__main__":
-    app.run()
+    app.run(host="0.0.0.0",debug=True)

@@ -34,7 +34,7 @@ class DataBase:
             
     def GetProviderByName(self,name):
         sql=f"SELECT * FROM Provider WHERE name = '{name}'"
-        self.cursor(execute(sql))
+        self.cursor.execute(sql)
         result = self.cursor.fetchall()
         return result
 
