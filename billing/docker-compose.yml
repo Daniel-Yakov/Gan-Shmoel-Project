@@ -5,9 +5,7 @@ services:
     build: ./pythonapp/
     ports:
       - 8080:5000
-    volumes:
-      - ./pythonapp:/in
-    command: sh -c "sleep 10; python3 billing.py"
+    command: sh -c "python3 billing.py"
     depends_on:
       - mysql
   mysql:

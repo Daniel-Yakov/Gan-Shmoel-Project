@@ -2,15 +2,10 @@ import mysql.connector
 
 
 class DataBase:
-    db_host ="localhost"
-    db_port = "3306"
-    db_user = "root"
     
     def __init__(self, db_name, db_password):
-        self.password = db_password
-        self.name = db_name
         self.connection = mysql.connector.connect(
-            host=DataBase.db_host, port=DataBase.db_port, user=DataBase.db_user, password=db_password, database=db_name)
+            host="mysql", port="3306", user="root", password=f"{db_password}", database=f"{db_name}")
         print("DB connected!")
         self.cursor = self.connection.cursor()
 
