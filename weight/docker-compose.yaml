@@ -9,10 +9,9 @@ services:
         condition: service_healthy 
 
   my_data:
-    build: ./my_sql
+    image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: weight
     ports:
       - "3306:3306"
     volumes:
@@ -22,12 +21,12 @@ services:
     healthcheck: # check the healthiness with the following configuration
       test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--user=root', '--password=root']
       interval: 3s
-      timeout: 3s
-      retries: 15 
- 
+      timeout: 7s
+      retries: 15
 networks:
   blue-net:
     
-
 volumes:
   weight_sql:
+    driver: local
+  
