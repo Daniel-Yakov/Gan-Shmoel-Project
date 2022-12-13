@@ -22,6 +22,11 @@ services:
     build: ./pythonapp/
     ports:
       - 8089:5000
+    volumes:
+      - type: bind
+        source: ./pythonapp/in/
+        target: /in/
+    
     command: sh -c "python3 billing.py"
     depends_on:
       mysql:

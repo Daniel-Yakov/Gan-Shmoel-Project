@@ -1,5 +1,6 @@
 import mysql.connector
-
+import pandas as pd
+import openpyxl
 
 class DataBase:
     
@@ -36,7 +37,22 @@ class DataBase:
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
         return result
-
+    
+    def cleanRatesTable(self):
+        sql = f"DELETE FROM Rates;"
+        self.cursor.execute(sql)
+        self.connection.commit()
+    
+    def createRatesFromFile(self):
+        text = pd.read_excel("/in/rates.xlsx")
+        text = text.to_numpy().tolist()
+        for t in text:
+            product_id = t[0]
+            rate = t[1]
+            scope = t[2]
+            sql =  f"INSERT INTO Rates (`product_id`, `rate`, `scope`) VALUES ('{product_id}', {rate}, '{scope}')"    
+            self.cursor.execute(sql)
+        self.connection.commit()
         
     def addTruck(self,providerID,truckID):
         sql="INSERT INTO Trucks (id, provider_id) VALUES ("+str(truckID)+","+ str(providerID)+");"

@@ -39,6 +39,15 @@ def ChangeName(id):
     DB.changeProviderName(id,new_name)
     return "changed"
 
+@app.route("/rates", methods=["GET"])
+def downloadFile():
+    pass
+
+@app.route("/rates", methods=["POST"])
+def updateFile():
+    DB.cleanRatesTable()
+    DB.createRatesFromFile()
+    return "Success"
 
 @app.route("/truck", methods=["POST"])
 def addTruck():
