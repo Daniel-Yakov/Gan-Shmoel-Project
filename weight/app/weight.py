@@ -2,6 +2,7 @@
 from flask import Flask, request, jsonify
 import connection
 import requests
+from datetime import datetime,date
 
 app_w = Flask(__name__)
 test_url = "https://www.google.com"
@@ -14,20 +15,18 @@ def home():
 
 # POST /weight (called by new weight)
 @app_w.post('/weight')
-def weight_post():
-    ########################################################################################################
+def transaction_post():
     # get data from request
     req_data = request.get_json()
     direction = req_data.get('direction')
     truck = req_data.get('truck')
-    containers = req_data.get('containers')
-    weight = req_data.get('weight')
-    unit = req_data.get('unit')
-    force = req_data.get('force')
+    # containers = req_data.get('containers')
+    tweight = int(req_data.get('weight'))
+    #unit = req_data.get('unit')
+    #force = req_data.get('force')
     produce = req_data.get('produce')
-
     # check if all the required fields are present
-    if (direction == None or weight == None or unit == None or force == None or produce == None):
+    if (direction == None or tweight == None or produce == None):
         return "Missing parameters!", 400
 
     # check if truck is provided if weighing a truck
@@ -35,59 +34,69 @@ def weight_post():
         return "Missing truck parameter!", 400
 
     # check if containers are provided if weighing a container
-    if (direction == "none") and containers == None:
+    if (direction == "none"):  # and containers == None:
         return "Missing containers parameter!", 400
 
     # check if force is true/false
-    if (force != True and force != False):
-        return "Force parameter should be true/false!", 400
+    # if (force != True and force != False):
+    #    return "Force parameter should be true/false!", 400
 
     # check if direction is "in", "out" or "none"
     if (direction != "in" and direction != "out" and direction != "none"):
         return "Direction should be in/out/none!", 400
 
     # check if unit is "lbs" or "kg"
-    if (unit != "lbs" and unit != "kg"):
-        return "Unit should be lbs/kg!", 400
+    # if (unit != "lbs" and unit != "kg"):
+    #    return "Unit should be lbs/kg!", 400
 
     # check if produce is a valid produce
-    if (produce != "na"):
-        r = requests.get(test_url)
-        if (r.status_code != 200):
-            return "Invalid produce!", 400
+    if produce == "":
+        produce = "na"
 
     # if all the checks pass, start recording data
     conn = connection.get_connection()
     cur = connection.get_cursor(conn)
 
+    timestamp = datetime.now()  # להכניס לתוך הטבלה
+
     # generate a unique weight id
-    weight_id = generate_weight_id(conn)
-
-    # add data to the DB
-    query = "INSERT INTO weights (id, direction, truck, containers, weight, unit, force, produce) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    cur.execute(query, (weight_id, direction, truck,
-                containers, weight, unit, force, produce))
-    conn.commit()
-
-    # return the weight id
-    return jsonify({"id": weight_id, "truck": truck, "bruto": weight, "truckTara": 0, "neto": 0})
-
-
-def generate_weight_id(conn):
     cur = connection.get_cursor(conn)
-    query = "SELECT MAX(id) AS max_id FROM weights"
+    query = "SELECT MAX(id) AS max_id FROM transactions"
     cur.execute(query)
     row = cur.fetchone()
-    if row is None:
-        return "weight_1"
+    if row[0] is None:
+        transaction_id = 1
     else:
         max_id = row[0]
-        max_id_int = int(str(max_id).split("_")[1])
-        new_id_int = max_id_int + 1
-        return "weight_"+str(new_id_int)
+        max_id_int = int(max_id) + 1
+        transaction_id = max_id_int
+
+    # add data to the DB
+    # direction, truck, containers, weight, unit, force, produce
+    query = "INSERT INTO transactions (direction,datetime, truck,produce) VALUES (%s,%s,%s,%s)"
+    # Add a containers after the truck
+    cur.execute(query, (direction, timestamp, truck, produce))
+    conn.commit()
+    total_weight_containers = 0
+
+# Iterate through the list of containers_id
+    # for container_id in containers:
+    # Execute the SQL query
+    #    cur.execute(
+    #        "SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
+    # Fetch the result
+    #    result = cur.fetchone()
+    # If the container_id is found in the table, add its weight to the total
+    #    if result != None:
+    #        total_weight_containers += result[0]
+
+    # return
+    if direction == "out":
+        return jsonify({"id": transaction_id, "truck": truck, "bruto": tweight, "truckTara": tweight-total_weight_containers, "neto": tweight-total_weight_containers-(tweight-total_weight_containers)})
+    else:
+        return jsonify({"id": transaction_id, "truck": truck, "bruto": tweight})
 
         ####################################################################################
-
 # POST /batch-weight (called by admin)
 
 
@@ -104,29 +113,46 @@ def unknown():
 
 # GET /weight (report by time)
 @app_w.get('/weight')
-def weight_get():
-    t1 = request.args.get('from')
-    t2 = request.args.get('to')
+def transaction_get():
+    # t1 = request.args.get('from')
+    # t2 = request.args.get('to')
+    # filter = request.args.get('filter')
+    # # default t1 is "today at 000000". default t2 is "now".
+    # if t1 is None:
+    #     t1 = 'today at 000000'
+    # if t2 is None:
+    #     t2 = 'now'
+    # # default filter is "in,out,none"
+    # if filter is None:
+    #     filter = 'in'
+
+    now = datetime.now()
+    date_time_str = now.strftime("%Y%m%d%H%M%S")
+    today = date.today()
+    t1_str=today.strftime("%Y%m%d000000")
+    t1 = request.args.get(f"from {t1_str}")
+    t2 = request.args.get(f"to {date_time_str}")
     filter = request.args.get('filter')
     # default t1 is "today at 000000". default t2 is "now".
-    if t1 is None:
-        t1 = 'today at 000000'
-    if t2 is None:
-        t2 = 'now'
-    # default filter is "in,out,none"
-    if filter is None:
-        filter = 'in,out,none'
+    # if t1 is None:
+    #     t1 = t1_str
+    # if t2 is None:
+    #     t2 = date_time_str
+    # # default filter is "in,out,none"
+    # if filter is None:
+    #     filter = 'in'
 
     # create a connection to the DB
     conn = connection.get_connection()
 
-    # get weigh data
+    # get weight data
     cur = conn.cursor()
-    cur.execute("SELECT * FROM weigh_table WHERE timestamp BETWEEN %s AND %s AND direction IN (%s)", (t1, t2, filter))
+    #cur.execute("SELECT * FROM transactions WHERE datetime BETWEEN %s AND %s AND direction IN (%s)", (t1, t2, filter))
+    cur.execute("SELECT * FROM transactions")
     rows = cur.fetchall()
 
     # format json data
-    data = []
+    data=[]
     for row in rows:
         data.append({
             'id': row[0],
@@ -134,12 +160,12 @@ def weight_get():
             'bruto': row[2],
             'neto': row[3],
             'produce': row[4],
-            'containers': row[5].split(',')
-        })
+            'containers': str(row[5]).split(' ')})
 
     cur.close()
     conn.close()
     return jsonify(data)
+
 
 
 # GET /item/<id> (truck/container report)
@@ -230,3 +256,4 @@ def health():
 
 if __name__ == "__main__":
     app_w.run(host="0.0.0.0", debug=True)
+
