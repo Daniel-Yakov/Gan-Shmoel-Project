@@ -22,7 +22,7 @@ mail = Mail(app)
 @app.route("/trigger")
 def index():
   msg = Message('Test Status', recipients = ['bagoxi8407@nazyno.com'])
-  #msg.add_recipient("somebodyelse@example.com")
+  # msg.add_recipient("somebodyelse@example.com")
   msg.body = "Hello you have a failer"
   mail.send(msg)
   return "Mail sent!"
