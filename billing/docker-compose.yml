@@ -12,6 +12,11 @@ services:
       - '3306:3306'
     volumes:
       - mysql-data:/var/lib/mysql/
+    healthcheck: 
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--user=root', '--password=root']
+      interval: 3s
+      timeout: 7s
+      retries: 15
   
   pythonapp:
     build: ./pythonapp/
@@ -19,7 +24,8 @@ services:
       - 8089:5000
     command: sh -c "python3 billing.py"
     depends_on:
-      - mysql  
+      mysql:
+        condition: service_healthy  
 
 volumes:
   mysql-data:
