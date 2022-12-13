@@ -11,8 +11,9 @@ def health_check():
 
 @app.post('/trigger')
 def trigger():
-    data = json.loads(request)
-    print(f'action = {data["action"]}, pusher= {data["pusher"]}, repository.branches_url={data["repository.branches_url"]}')
+    
+    # data = json.loads(request)
+    # print(f'action = {data["action"]}, repository.branches_url={data["repository.branches_url"]}')
     return "OK"
 
 
