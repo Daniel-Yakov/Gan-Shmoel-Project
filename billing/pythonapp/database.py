@@ -38,3 +38,14 @@ class DataBase:
         return result
 
         
+    def addTruck(self,providerID,truckID):
+        sql="INSERT INTO Trucks (id, provider_id) VALUES ("+str(truckID)+","+ str(providerID)+");"
+        self.cursor.execute(sql)
+        self.connection.commit()
+        return truckID
+    def ChangeTruckID(self,plate,newProvider):
+        sql=f"UPDATE Trucks SET provider_id='{newProvider}' WHERE id='{plate}';"
+        self.cursor.execute(sql)
+        self.connection.commit()
+        return newProvider
+        

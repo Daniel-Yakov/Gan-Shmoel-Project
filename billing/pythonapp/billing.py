@@ -1,5 +1,6 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify,request
 from database import *
+
 
 app = Flask(__name__)
 
@@ -30,6 +31,7 @@ def CreateProvider():
     id={"id":DB.GetProviderByName(name)} 
     return jsonify(id)
 
+
     
 @app.route("/provider/<id>",methods=['PUT'])
 def ChangeName(id):
@@ -47,19 +49,29 @@ def updateFile():
 
 @app.route("/truck", methods=["POST"])
 def addTruck():
-    pass
+    
+    id = request.args.get('id')
+    plate = request.args.get('plate')
+        
+    if id==None:
+        return jsonify("error"),500
+    if plate==None:
+        return jsonify("error"),500
+    
+    return jsonify(DB.addTruck(int(id),str(plate)))
 
-@app.route("/truck/<id>",methods=["PUT"])    
-def updateProvider():
-    pass
 
-@app.route("/truck/<id>?from=t1&to=t2",methods=["GET"])    
-def my_func_1():
-    pass
+@app.route("/truck/<id>", methods=["PUT"])
+def changIDtruck(id):
+    plate = request.args.get('plate')
+    #Truck=DB.ChangeTruckID(plate,id)
+    return jsonify("Truck")
 
-@app.route("/bill/<id>?from=t1&to=t2",methods=["GET"])
-def my_func_2():
-    pass
+
+
+
+
+
 
 
 if __name__=="__main__":
