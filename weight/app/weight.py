@@ -150,8 +150,68 @@ def item_id():
 
 # GET /session/<id> (weighing report)
 @app_w.get('/session/<id>')
-def session_id():
-    pass
+def session_id(id):
+    my_id=id
+    conn = connection.get_connection()
+    cur = connection.get_cursor(conn)
+
+    cur.execute("SELECT direction from transactions where id =%s",my_id)
+    if cur.fetchone()=="out":
+        isout=False
+    else:
+        isout=True
+
+    if isout == False:
+        cur.execute("SELECT id,truck,bruto from transactions where id =%s",my_id)
+        row = cur.fetchone()
+        id1, truck1, bruto1 = row[0], row[1], row[2]
+
+
+
+        # End of part 1
+        return{ "id": id1, 
+        "truck": truck1 or "na",
+        "bruto": bruto1}
+    
+    
+    
+    else:
+        cur.execute("SELECT id,truck,bruto,weight from transactions where id =%s",my_id)
+        row = cur.fetchone()
+        id1, truck1, bruto1,weight = row[0], row[1], row[2], row[3]
+
+        cur.execute("SELECT containers from transactions where id =%s",my_id)
+        my_containers=cur.fetchone()
+        my_containers=str(my_containers).split(" ")
+
+        # Iterate through the list of containers_id
+
+        total_weight_containers = 0
+
+        for container_id in my_containers:
+            # Execute the SQL query
+            cur.execute("SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
+            # Fetch the result
+            result = cur.fetchone()
+            # If the container_id is found in the table, add its weight to the total
+            if result is not None:
+                total_weight_containers += result[0]
+            # Checks if there is a container that has no weight
+            else:
+                flag=True
+        # Final calculation rely on the flag
+        if flag:
+            Neto="na"
+        else:
+            Neto=total_weight_containers-bruto1- (int(weight)-total_weight_containers)
+
+        # End of part 2
+        return{ "id": id1, 
+        "truck": truck1 or "na",
+        "bruto": bruto1,
+        "truckTara": int(weight)-total_weight_containers,
+        "neto": Neto
+          }
 
 
 #GET /health
