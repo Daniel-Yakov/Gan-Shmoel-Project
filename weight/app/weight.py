@@ -20,10 +20,10 @@ def transaction_post():
     req_data = request.get_json()
     direction = req_data.get('direction')
     truck = req_data.get('truck')
-    # containers = req_data.get('containers')
+    containers = req_data.get('containers')
     tweight = int(req_data.get('weight'))
     #unit = req_data.get('unit')
-    #force = req_data.get('force')
+    # force = req_data.get('force')
     produce = req_data.get('produce')
     # check if all the required fields are present
     if (direction == None or tweight == None or produce == None):
@@ -34,13 +34,12 @@ def transaction_post():
         return "Missing truck parameter!", 400
 
     # check if containers are provided if weighing a container
-    if (direction == "none"):  # and containers == None:
+    if (direction == "none" and containers == None):
         return "Missing containers parameter!", 400
 
     # check if force is true/false
-    # if (force != True and force != False):
-    #    return "Force parameter should be true/false!", 400
-
+    # if not force:
+    #     force=False
     # check if direction is "in", "out" or "none"
     if (direction != "in" and direction != "out" and direction != "none"):
         return "Direction should be in/out/none!", 400
@@ -59,7 +58,7 @@ def transaction_post():
 
     timestamp = datetime.now()  # להכניס לתוך הטבלה
 
-    # generate a unique weight id
+    # generate a unique weight id לשנות את הקוד להשתמש ומזהה דיפולטיבי
     cur = connection.get_cursor(conn)
     query = "SELECT MAX(id) AS max_id FROM transactions"
     cur.execute(query)
@@ -80,15 +79,11 @@ def transaction_post():
     total_weight_containers = 0
 
 # Iterate through the list of containers_id
-    # for container_id in containers:
-    # Execute the SQL query
-    #    cur.execute(
-    #        "SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
-    # Fetch the result
-    #    result = cur.fetchone()
-    # If the container_id is found in the table, add its weight to the total
-    #    if result != None:
-    #        total_weight_containers += result[0]
+    for container_id in containers:
+        cur.execute("SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
+        result = cur.fetchone()
+        if result != None:
+            total_weight_containers += result[0]
 
     # return
     if direction == "out":
@@ -96,6 +91,7 @@ def transaction_post():
     else:
         return jsonify({"id": transaction_id, "truck": truck, "bruto": tweight})
 
+       
         ####################################################################################
 # POST /batch-weight (called by admin)
 
@@ -141,18 +137,20 @@ def transaction_get():
     # # default filter is "in,out,none"
     # if filter is None:
     #     filter = 'in'
-
+    
     # create a connection to the DB
     conn = connection.get_connection()
-
+    
     # get weight data
     cur = conn.cursor()
     #cur.execute("SELECT * FROM transactions WHERE datetime BETWEEN %s AND %s AND direction IN (%s)", (t1, t2, filter))
-    cur.execute("SELECT * FROM transactions")
+    cur.execute("SELECT id,direction,bruto,neto,produce,containers FROM transactions")
     rows = cur.fetchall()
-
+    cur.close()
+    conn.close()
     # format json data
     data=[]
+    
     for row in rows:
         data.append({
             'id': row[0],
@@ -162,8 +160,8 @@ def transaction_get():
             'produce': row[4],
             'containers': str(row[5]).split(' ')})
 
-    cur.close()
-    conn.close()
+#    cur.close()
+#   conn.close()
     return jsonify(data)
 
 

@@ -20,8 +20,8 @@ services:
       - weight_sql:/var/lib/mysql
     healthcheck: # check the healthiness with the following configuration
       test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--user=root', '--password=root']
-      interval: 3s
-      timeout: 7s
+      interval: 5s
+      timeout: 10s
       retries: 15
 
 volumes:
