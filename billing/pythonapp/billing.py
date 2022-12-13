@@ -39,13 +39,6 @@ def ChangeName(id):
     DB.changeProviderName(id,new_name)
     return "changed"
 
-@app.route("/rates", methods=["GET"])
-def downloadFile():
-    pass
-
-@app.route("/rates", methods=["POST"])
-def updateFile():
-    pass
 
 @app.route("/truck", methods=["POST"])
 def addTruck():
@@ -64,8 +57,8 @@ def addTruck():
 @app.route("/truck/<id>", methods=["PUT"])
 def changIDtruck(id):
     plate = request.args.get('plate')
-    #Truck=DB.ChangeTruckID(plate,id)
-    return jsonify("Truck")
+    Truck=DB.ChangeTruckID(plate,id)
+    return jsonify(Truck)
 
 
 
