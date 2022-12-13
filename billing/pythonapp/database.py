@@ -10,6 +10,11 @@ class DataBase:
         self.cursor = self.connection.cursor()
 
 
+    def getHealthCheck(self):
+        self.cursor.execute("SELECT 1;")
+        result = self.cursor.fetchall()
+        return result[0][0]
+        
     def addProvider(self, name):
         sql = f"INSERT INTO Provider (name) VALUES ('{name}');"
         self.cursor.execute(sql)
