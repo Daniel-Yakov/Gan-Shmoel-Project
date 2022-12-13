@@ -1,20 +1,24 @@
-from flask import Flask, jsonify,request
+from flask import Flask, jsonify,request, send_file
 from database import *
+import shutil
 
-
+#create flask
 app = Flask(__name__)
 
+# create database connection with 'database' class
 DB=DataBase("billdb", "root")
 
-def my_generator():
+
+def my_id_generator():
     i=1
     while i>0:
         i+=1
         yield i
-gen = my_generator()
+gen = my_id_generator()
 
 
-# need to add healthcheck of the database!!!
+
+# health check of both the flask and the database
 @app.route("/health", methods=["GET"])
 def isHealthy():
     
@@ -24,55 +28,72 @@ def isHealthy():
     else:
         return jsonify(status="Database Failure"),500
 
+
+
+# create new provider in the database
 @app.route("/provider", methods=['POST'])
 def CreateProvider():
-    name='Provider'+str(next(gen))
+    name = request.args.get('name')
+    if name == None:
+        name='Provider'+str(next(gen))
     DB.addProvider(name)
-    id={"id":DB.GetProviderByName(name)} 
-    return jsonify(id)
+    return jsonify(id=DB.GetProviderByName(name))
 
 
-    
+
+# to change name of existing provider by the drovider's id    
 @app.route("/provider/<id>",methods=['PUT'])
 def ChangeName(id):
-    new_name='Provider'+str(next(gen))
+    new_name = request.args.get('name')
+    if new_name == None:
+        new_name='Provider'+str(next(gen))
     DB.changeProviderName(id,new_name)
-    return "changed"
+    return jsonify(success="provider name has changed")
 
-@app.route("/rates", methods=["GET"])
+
+
+# download the xlsx file of the rates (/in/rates.xlsx) 
+# into backups folder in the container (/rates_backups/)
+@app.route('/rates', methods=['GET'])
 def downloadFile():
-    pass
+#   file_name = request.args.get('file_name')
+  file_path = '/in/rates.xlsx'
+  shutil.copy(file_path, f'./rates_backups/ratesBU_{str(next(gen))}.xlsx')
+  return jsonify(success='File downloaded successfully')
 
+
+
+# method to update the database according to the rates.xlsx file on the host
 @app.route("/rates", methods=["POST"])
 def updateFile():
     DB.cleanRatesTable()
     DB.createRatesFromFile()
-    return "Success"
+    return jsonify(success="Rates table is up to date")
 
-@app.route("/truck", methods=["POST"])
-def addTruck():
-    
+
+
+# method to create a new truck
+@app.route("/truck?id=i&plate=p", methods=["POST"])
+def addTruck():    
     id = request.args.get('id')
     plate = request.args.get('plate')
         
     if id==None:
-        return jsonify("error"),500
+        return jsonify(error="id is missing"),500
     if plate==None:
-        return jsonify("error"),500
+        return jsonify(error="plate is missing"),500
     
     return jsonify(DB.addTruck(int(id),str(plate)))
 
 
+# change truck's plate 
 @app.route("/truck/<id>", methods=["PUT"])
 def changIDtruck(id):
     plate = request.args.get('plate')
+    if plate==None:
+        return jsonify(error="plate is missing"),500
     Truck=DB.ChangeTruckID(plate,id)
-    return jsonify(Truck)
-
-
-
-
-
+    return jsonify(success=Truck)
 
 
 

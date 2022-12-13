@@ -26,7 +26,11 @@ services:
       - type: bind
         source: ./pythonapp/in/
         target: /in/
-    
+      - type: volume
+        source: backups
+        target: /rates_backups/
+        volume:
+          nocopy: true
     command: sh -c "python3 billing.py"
     depends_on:
       mysql:
@@ -35,3 +39,4 @@ services:
 volumes:
   mysql-data:
     driver: local
+  backups:

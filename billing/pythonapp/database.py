@@ -31,7 +31,8 @@ class DataBase:
         self.cursor.execute("SELECT count(*) FROM Provider;")
         result = self.cursor.fetchall()
         return result
-            
+    
+    # change to return a number        
     def GetProviderByName(self,name):
         sql=f"SELECT id FROM Provider WHERE name='{name}';"
         self.cursor.execute(sql)
