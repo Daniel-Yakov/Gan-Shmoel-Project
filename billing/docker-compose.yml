@@ -16,7 +16,7 @@ services:
   pythonapp:
     build: ./pythonapp/
     ports:
-      - 8080:5000
+      - 8089:5000
     command: sh -c "python3 billing.py"
     depends_on:
       - mysql  
