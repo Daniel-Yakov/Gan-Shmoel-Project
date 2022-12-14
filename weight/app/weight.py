@@ -56,7 +56,7 @@ def transaction_post():
     conn = connection.get_connection()
     cur = conn.cursor()
 
-    timestamp = datetime.now()  # להכניס לתוך הטבלה
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  # להכניס לתוך הטבלה
 
     # generate a unique weight id לשנות את הקוד להשתמש ומזהה דיפולטיבי
     cur = conn.cursor()
@@ -74,15 +74,8 @@ def transaction_post():
 
     # add data to the DB
     # direction, truck, containers, weight, unit, force, produce
-    conn = connection.get_connection()
-    cur = conn.cursor()
-    query = "INSERT INTO transactions (direction,datetime, truck,produce) VALUES (%s,%s,%s,%s)"
-    # Add a containers after the truck
-    cur.execute(query, (direction, timestamp, truck, produce))
-    conn.commit()
+   
     total_weight_containers = 0
-    cur.close()
-    conn.close()
 # Iterate through the list of containers_id
     conn = connection.get_connection()
     cur = conn.cursor()
@@ -96,13 +89,35 @@ def transaction_post():
 
     # return
     if direction == "out":
-        return jsonify({"id": transaction_id, "truck": truck, "bruto": tweight, "truckTara": tweight-total_weight_containers, "neto": tweight-total_weight_containers-(tweight-total_weight_containers)})
+        truckTaraVal=int(tweight-total_weight_containers)
+        netoVal=int(tweight-total_weight_containers-(tweight-total_weight_containers))
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto,truckTara,neto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{tweight}','{truckTaraVal}','{netoVal}')"
+        # Add a containers after the truck
+        cur.execute(query)
+        conn.commit()
+    
+        cur.close()
+        conn.close()
+        return jsonify({"id": transaction_id, "truck": truck, "bruto": tweight, "truckTara": truckTaraVal, "neto":netoVal})
     else:
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{tweight}')"
+        # Add a containers after the truck
+        cur.execute(query)
+        conn.commit()
+        cur.close()
+        conn.close()
+
+
         return jsonify({"id": transaction_id, "truck": truck, "bruto": tweight})
 
        
         ####################################################################################
 # POST /batch-weight (called by admin)
+
 
 
 @app_w.post('/batch-weight')
