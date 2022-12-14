@@ -59,18 +59,18 @@ def transaction_post():
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  # להכניס לתוך הטבלה
 
     # generate a unique weight id לשנות את הקוד להשתמש ומזהה דיפולטיבי
-    cur = conn.cursor()
-    query = "SELECT MAX(id) AS max_id FROM transactions"
-    cur.execute(query)
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
-    if row[0] is None:
-        transaction_id = 1
-    else:
-        max_id = row[0]
-        max_id_int = int(max_id) + 1
-        transaction_id = max_id_int
+    # cur = conn.cursor()
+    # query = "SELECT MAX(id) AS max_id FROM transactions"
+    # cur.execute(query)
+    # row = cur.fetchone()
+    # cur.close()
+    # conn.close()
+    # if row[0] is None:
+    #     transaction_id = 1
+    # else:
+    #     max_id = row[0]
+    #     max_id_int = int(max_id) + 1
+    #     transaction_id = max_id_int
 
     # add data to the DB
     # direction, truck, containers, weight, unit, force, produce
@@ -99,10 +99,17 @@ def transaction_post():
         # Add a containers after the truck
         cur.execute(query)
         conn.commit()
-    
         cur.close()
         conn.close()
-        return jsonify({"id": transaction_id, "truck": truck, "bruto": tweight, "truckTara": truckTaraVal, "neto":netoVal})
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT max(id) FROM transactions ")
+        transaction_id=cur.fetchone()
+        cur.close()
+        conn.close()
+        my_id=transaction_id[0]
+        return jsonify({"id":my_id, "truck": truck, "bruto": tweight, "truckTara": truckTaraVal, "neto":netoVal})
+        # return jsonify(transaction_id[0])
     else:
         conn = connection.get_connection()
         cur = conn.cursor()
@@ -112,10 +119,16 @@ def transaction_post():
         conn.commit()
         cur.close()
         conn.close()
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT max(id) FROM transactions ")
+        transaction_id=cur.fetchone()
+        cur.close()
+        conn.close()
 
-
-        return jsonify({"id": transaction_id, "truck": truck, "bruto": tweight})
-
+        my_id=transaction_id[0]
+        return jsonify({"id":my_id, "truck": truck, "bruto": tweight})
+        # return jsonify(transaction_id[0])
        
         ####################################################################################
 # POST /batch-weight (called by admin)
@@ -156,11 +169,10 @@ def transaction_get():
     #     filter = 'in'
 
     now = datetime.now()
-    date_time_str = int(now.strftime("%Y%m%d%H%M%S"))
+    t2 = int(now.strftime("%Y%m%d%H%M%S"))
     today = date.today()
-    t1_str=int(today.strftime("%Y%m%d000000"))
-    t1 = request.args.get(f"from {t1_str}")
-    t2 = request.args.get(f"to {date_time_str}")
+    t1=int(today.strftime("%Y%m%d000000"))
+    
     filter = request.args.get('filter')
     # default t1 is "today at 000000". default t2 is "now".
     # if t1 is None:
@@ -184,7 +196,7 @@ def transaction_get():
         
         # get weight data
         cur = conn.cursor()
-        cur.execute("SELECT * FROM transactions WHERE datetime BETWEEN %s AND %s AND direction = %s", (t1_str, date_time_str, filter))
+        cur.execute("SELECT id,direction,bruto,neto,produce,containers FROM transactions WHERE datetime BETWEEN %s AND %s AND direction = %s", (t1, t2, filter))
         #cur.execute("SELECT id,direction,bruto,neto,produce,containers FROM transactions")
         rows = cur.fetchall()
         cur.close()
