@@ -208,6 +208,7 @@ def transaction_get():
 
 
 # GET /item/<id> (truck/container report)
+# GET /item/<id> (truck/container report)
 @app_w.get('/item/<id>')
 def item_id(id):
     # assume the server time is the current time
@@ -228,7 +229,8 @@ def item_id(id):
     conn = connection.get_connection()
     cur = conn.cursor()
     cur.execute("SELECT id, truckTara FROM transactions WHERE truck= %s", (item_id))
-    rows = cur.fetchall()
+    ListofTuple= cur.fetchall()#
+    myId,my_truckTara=ListofTuple[0]
     cur.close()
     conn.close()
     # if rows[0] ==None:
@@ -238,22 +240,39 @@ def item_id(id):
     #     rows = cur.fetchall()
     #     cur.close()
     #     conn.close()
-    if rows[0]==None:
+
+
+    if ListofTuple is None:
         return 404
     # retrieve the item from the database
     # item = db.get_item(item_id)
-    conn = connection.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM transactions WHERE id=%s" ,(row[0]))
-    resultSes = cur.fetchall()
-    cur.close()
-    conn.close()
     data=[]
-    for row in rows:
+    for myId, my_truckTara in ListofTuple:
+        print(f'{myId}: {my_truckTara}')
+
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM transactions WHERE id=%s" ,(myId))
+        resultSes = cur.fetchall()
+        cur.close()
+        conn.close()
+    
+    
+        if my_truckTara is type==int:
+            Tara=int(my_truckTara)
+        else:
+            Tara="na"
+        ses_data=[]
+        for row in resultSes:
+            ses_data.append({
+                'time' : row[1],
+                'weight' : row[3]
+            })
+
         data.append({
-            'id':item_id,
-            'truckTara': row[1],
-            'session' : jsonify(resultSes)
+            'id':myId,
+            'tara':Tara,
+            'session' : ses_data
             })
     return jsonify(data)
 
