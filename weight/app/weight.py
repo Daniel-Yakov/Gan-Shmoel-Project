@@ -156,9 +156,9 @@ def transaction_get():
     #     filter = 'in'
 
     now = datetime.now()
-    date_time_str = now.strftime("%Y%m%d%H%M%S")
+    date_time_str = int(now.strftime("%Y%m%d%H%M%S"))
     today = date.today()
-    t1_str=today.strftime("%Y%m%d000000")
+    t1_str=int(today.strftime("%Y%m%d000000"))
     t1 = request.args.get(f"from {t1_str}")
     t2 = request.args.get(f"to {date_time_str}")
     filter = request.args.get('filter')
@@ -176,8 +176,8 @@ def transaction_get():
     
     # get weight data
     cur = conn.cursor()
-    #cur.execute("SELECT * FROM transactions WHERE datetime BETWEEN %s AND %s AND direction IN (%s)", (t1, t2, filter))
-    cur.execute("SELECT id,direction,bruto,neto,produce,containers FROM transactions")
+    cur.execute("SELECT * FROM transactions WHERE datetime BETWEEN %s AND %s AND direction = %s", (t1_str, date_time_str, filter))
+    #cur.execute("SELECT id,direction,bruto,neto,produce,containers FROM transactions")
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -191,7 +191,7 @@ def transaction_get():
             'bruto': row[2],
             'neto': row[3],
             'produce': row[4],
-            'containers': str(row[5]).split(' ')}) #
+            'containers': str(row[5]).split(',')}) #לעשות משהו אחר אם קורה שאין IN
 
 #    cur.close()
 #   conn.close()
