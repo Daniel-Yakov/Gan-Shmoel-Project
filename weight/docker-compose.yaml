@@ -2,8 +2,11 @@ version: '3'
 services:
   app_weight:
     build: ./app/
+    environment:
+      WEIGHT_APP_PORT: ${WEIGHT_APP_PORT}
+      # MYSQL_WEIGHT_PORT: ${MYSQL_WEIGHT_PORT}
     ports:
-      - "5010:5000"
+      - "${WEIGHT_APP_PORT}:5000"
     command: /bin/bash -c "python3 weight.py"  
     depends_on:
       my_data:
@@ -14,8 +17,8 @@ services:
     environment:
       MYSQL_DATABASE: weight
       MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
+    # ports:
+    #   - "3306:3306"
     volumes:
       - weight_sql:/var/lib/mysql
     healthcheck: # check the healthiness with the following configuration
