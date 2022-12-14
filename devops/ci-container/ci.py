@@ -65,4 +65,4 @@ def trigger():
     return "Mail has been sent to you, go check it !"
 
 
-app.run(host="0.0.0.0",port=5001)
+app.run(host="0.0.0.0",port=4001)
