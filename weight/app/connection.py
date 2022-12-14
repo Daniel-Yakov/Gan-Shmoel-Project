@@ -1,13 +1,15 @@
 import pymysql
-connection = pymysql.connect(
-    host="my_data",
-    user="root",
-    port=3306,
-    password="root",
-    database="weight",
-    # charset="utf8mb4",
-    # cursorclass=pymysql.cursors.DictCursor
-)
+def get_connection():
+    connection = pymysql.connect(
+        host="my_data",
+        user="root",
+        port=3306,
+        password="root",
+        database="weight",
+        # charset="utf8mb4",
+        # cursorclass=pymysql.cursors.DictCursor
+    )
+    return connection
 
 
 # def Database_check():
@@ -35,11 +37,8 @@ def db_health_check():
         return False
 
 
-def get_connection():
-    return connection
 
 
-def get_cursor(my_connect):
-    # לבדוק אם החיבור חוקי
-    return connection.cursor()
+
+
 # Database_check()

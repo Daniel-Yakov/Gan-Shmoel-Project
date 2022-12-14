@@ -54,15 +54,17 @@ def transaction_post():
 
     # if all the checks pass, start recording data
     conn = connection.get_connection()
-    cur = connection.get_cursor(conn)
+    cur = conn.cursor()
 
     timestamp = datetime.now()  # להכניס לתוך הטבלה
 
     # generate a unique weight id לשנות את הקוד להשתמש ומזהה דיפולטיבי
-    cur = connection.get_cursor(conn)
+    cur = conn.cursor()
     query = "SELECT MAX(id) AS max_id FROM transactions"
     cur.execute(query)
     row = cur.fetchone()
+    cur.close()
+    conn.close()
     if row[0] is None:
         transaction_id = 1
     else:
@@ -72,18 +74,25 @@ def transaction_post():
 
     # add data to the DB
     # direction, truck, containers, weight, unit, force, produce
+    conn = connection.get_connection()
+    cur = conn.cursor()
     query = "INSERT INTO transactions (direction,datetime, truck,produce) VALUES (%s,%s,%s,%s)"
     # Add a containers after the truck
     cur.execute(query, (direction, timestamp, truck, produce))
     conn.commit()
     total_weight_containers = 0
-
+    cur.close()
+    conn.close()
 # Iterate through the list of containers_id
+    conn = connection.get_connection()
+    cur = conn.cursor()
     for container_id in containers:
         cur.execute("SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
         result = cur.fetchone()
         if result != None:
             total_weight_containers += result[0]
+    cur.close()
+    conn.close()
 
     # return
     if direction == "out":
@@ -177,46 +186,61 @@ def item_id():
 def session_id(id):
     my_id=id
     conn = connection.get_connection()
-    cur = connection.get_cursor(conn)
+    cur = conn.cursor()
 
     cur.execute("SELECT direction from transactions where id =%s",my_id)
     if cur.fetchone()=="out":
         isout=False
     else:
         isout=True
+    cur.close()
+    conn.close()
 
+   
     if isout == False:
+        conn = connection.get_connection()
+        cur = conn.cursor()
         cur.execute("SELECT id,truck,bruto from transactions where id =%s",my_id)
         row = cur.fetchone()
+        cur.close()
+        conn.close()
         id1, truck1, bruto1 = row[0], row[1], row[2]
 
 
-
+        
         # End of part 1
         return{ "id": id1, 
         "truck": truck1 or "na",
         "bruto": bruto1}
-    
-    
-    
     else:
+        conn = connection.get_connection()
+        cur = conn.cursor()
         cur.execute("SELECT id,truck,bruto,weight from transactions where id =%s",my_id)
         row = cur.fetchone()
         id1, truck1, bruto1,weight = row[0], row[1], row[2], row[3]
-
+        cur.close()
+        conn.close()
+        conn = connection.get_connection()
+        cur = conn.cursor()
         cur.execute("SELECT containers from transactions where id =%s",my_id)
         my_containers=cur.fetchone()
         my_containers=str(my_containers).split(" ")
+        cur.close()
+        conn.close()
 
         # Iterate through the list of containers_id
 
         total_weight_containers = 0
 
         for container_id in my_containers:
+            conn = connection.get_connection()
+            cur = conn.cursor()
             # Execute the SQL query
             cur.execute("SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
             # Fetch the result
             result = cur.fetchone()
+            cur.close()
+            conn.close()
             # If the container_id is found in the table, add its weight to the total
             if result is not None:
                 total_weight_containers += result[0]
