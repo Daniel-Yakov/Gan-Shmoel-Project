@@ -170,18 +170,26 @@ def transaction_get():
     # # default filter is "in,out,none"
     # if filter is None:
     #     filter = 'in'
-    
-    # create a connection to the DB
-    conn = connection.get_connection()
-    
-    # get weight data
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM transactions WHERE datetime BETWEEN %s AND %s AND direction = %s", (t1_str, date_time_str, filter))
-    #cur.execute("SELECT id,direction,bruto,neto,produce,containers FROM transactions")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    # format json data
+    if filter is None:
+        conn = connection.get_connection()
+        # get weight data
+        cur = conn.cursor()
+        cur.execute("SELECT id,direction,bruto,neto,produce,containers FROM transactions")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+    else:
+        # create a connection to the DB
+        conn = connection.get_connection()
+        
+        # get weight data
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM transactions WHERE datetime BETWEEN %s AND %s AND direction = %s", (t1_str, date_time_str, filter))
+        #cur.execute("SELECT id,direction,bruto,neto,produce,containers FROM transactions")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        # format json data
     data=[]
     
     for row in rows:
