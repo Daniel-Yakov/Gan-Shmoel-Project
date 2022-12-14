@@ -21,7 +21,7 @@ def succeed_email():
     msg.add_recipient("DavidovDav@outlook.com")
     msg.add_recipient("kareem.smartdoc@gmail.com")
     msg.add_recipient("shoval123055@gmail.com")
-    msg.body = "Hello the all the testing was succeeded \n You can see Your report here \n\n\n "
+    msg.body = "Hello the all the testing was succeeded \n You can see Your report added in this mail\n\n "
     with app.open_resource("report.txt") as report:
         msg.attach("report.txt","text/txt", report.read())
     mail.send(msg)
@@ -32,7 +32,7 @@ def fail_email():
      msg.add_recipient("DavidovDav@outlook.com")
      msg.add_recipient("kareem.smartdoc@gmail.com")
      msg.add_recipient("shoval123055@gmail.com")
-     msg.body = "Hello the all the testing was failed \n You can see Your report here"
+     msg.body = "Hello the all the testing was failed \n You can see Your report added in this mail\n\n"
      with app.open_resource("report.txt") as report:
         msg.attach("report.txt","text/txt", report.read())
      mail.send(msg)
