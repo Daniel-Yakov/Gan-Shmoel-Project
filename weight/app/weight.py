@@ -208,7 +208,7 @@ def transaction_get():
 
 
 # GET /item/<id> (truck/container report)
-# GET /item/<id> (truck/container report)
+
 @app_w.get('/item/<id>')
 def item_id(id):
     # assume the server time is the current time
@@ -275,7 +275,6 @@ def item_id(id):
             'session' : ses_data
             })
     return jsonify(data)
-
 
 # GET /session/<id> (weighing report)
 @app_w.get('/session/<id>')
