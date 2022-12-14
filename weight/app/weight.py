@@ -25,6 +25,8 @@ def transaction_post():
     #unit = req_data.get('unit')
     # force = req_data.get('force')
     produce = req_data.get('produce')
+
+    ####################################################### BAG לבדוק מה קורה שלא שולחים כלום 
     # check if all the required fields are present
     if (direction == None or tweight == None or produce == None):
         return "Missing parameters!", 400
@@ -243,9 +245,15 @@ def item_id(id):
     cur = conn.cursor()
     cur.execute("SELECT id, truckTara FROM transactions WHERE truck= %s", (item_id))
     ListofTuple= cur.fetchall()#
-    myId,my_truckTara=ListofTuple[0]
-    cur.close()
-    conn.close()
+    try:
+        myId,my_truckTara=ListofTuple[0]
+        cur.close()
+        conn.close()
+    except:
+        cur.close()
+        conn.close()
+        return jsonify("Not Found " + item_id)
+
     # if rows[0] ==None:
     #     conn = connection.get_connection()
     #     cur = conn.cursor()
