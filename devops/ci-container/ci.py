@@ -19,7 +19,9 @@ mail = Mail(app)
 def succeed_email():
     msg = Message('Test Status', recipients = ["daniel577000@gmail.com"])
     msg.add_recipient("DavidovDav@outlook.com")
-    msg.body = "Hello the all the testing was succeeded \n You can see Your report here \n\n\n "
+    msg.add_recipient("kareem.smartdoc@gmail.com")
+    msg.add_recipient("shoval123055@gmail.com")
+    msg.body = "Hello the all the testing was succeeded \n You can see Your report added in this mail\n\n "
     with app.open_resource("report.txt") as report:
         msg.attach("report.txt","text/txt", report.read())
     mail.send(msg)
@@ -28,7 +30,9 @@ def succeed_email():
 def fail_email():
      msg = Message('Test Status', recipients = ["daniel577000@gmail.co"])
      msg.add_recipient("DavidovDav@outlook.com")
-     msg.body = "Hello the all the testing was failed \n You can see Your report here"
+     msg.add_recipient("kareem.smartdoc@gmail.com")
+     msg.add_recipient("shoval123055@gmail.com")
+     msg.body = "Hello the all the testing was failed \n You can see Your report added in this mail\n\n"
      with app.open_resource("report.txt") as report:
         msg.attach("report.txt","text/txt", report.read())
      mail.send(msg)
@@ -40,7 +44,7 @@ def health_check():
 
 @app.post('/trigger')
 def trigger():
-    succeed_email()
+    fail_email()
     
 
     #exit_code = subprocess.call('./test-env.sh')
