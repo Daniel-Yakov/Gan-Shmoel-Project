@@ -83,3 +83,11 @@ class DataBase:
         self.connection.commit()
         return newProvider
         
+    def CheckForTruckID(self,truckID):
+        sql=f"SELECT id FROM Trucks WHERE id='{truckID}';"
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+        if result==[]:
+            return None
+        return result       
+        

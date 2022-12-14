@@ -28,7 +28,6 @@ gen = my_id_generator()
 # health check of both the flask and the database
 @app.route("/health", methods=["GET"])
 def isHealthy():
-    
     status=DB.getHealthCheck()
     if status == 1:
         return jsonify("OK"),200
@@ -102,6 +101,24 @@ def changIDtruck(id):
     Truck=DB.ChangeTruckID(plate,id)
     return jsonify(success=Truck)
 
+
+@app.route("/truck/<id>", methods=["GET"])
+def Gettruck(id):
+    From = request.args.get('from')
+    to= request.args.get('to')
+    if DB.CheckForTruckID(id)==None:
+        return jsonify("Truck not found"),404 
+    
+    truckID=int(DB.CheckForTruckID(id)[0][0])
+    #WEIGH= requests.get(f"http://localhost:{weight_port}/health?from={From}&to={to}").json()
+    WEIGH=[{ "id": 10001, "session": [ { "time": "Wed, 14 Dec 2022 09:55:38 GMT","weight": "T-14409"}]}]
+    
+    return WEIGH
+
+
+
+
+    
 
 @app.route("/bill/<id>", methods=["GET"])
 def getBill(id):
