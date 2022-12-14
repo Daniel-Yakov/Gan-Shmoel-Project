@@ -79,11 +79,13 @@ def transaction_post():
 # Iterate through the list of containers_id
     conn = connection.get_connection()
     cur = conn.cursor()
-    for container_id in containers:
+    listContainers=str(containers).split(",")
+    for container_id in listContainers:
         cur.execute("SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
         result = cur.fetchone()
         if result != None:
             total_weight_containers += result[0]
+        else: pass
     cur.close()
     conn.close()
 
@@ -128,7 +130,14 @@ def batchWeight_post():
 # GET /unknown (called by admin)
 @app_w.get('/unknown')
 def unknown():
-    pass
+    conn = connection.get_connection()
+    cur = conn.cursor()
+    sql = "SELECT container_id FROM containers_registered WHERE weight IS NULL"
+    cur.execute(sql)
+    unknown_containers = cur.fetchall()
+    cur.close()
+    conn.close()
+    return "".join(str(unknown_containers))
 
 
 # GET /weight (report by time)
@@ -182,7 +191,7 @@ def transaction_get():
             'bruto': row[2],
             'neto': row[3],
             'produce': row[4],
-            'containers': str(row[5]).split(' ')})
+            'containers': str(row[5]).split(' ')}) #
 
 #    cur.close()
 #   conn.close()
@@ -192,8 +201,53 @@ def transaction_get():
 
 # GET /item/<id> (truck/container report)
 @app_w.get('/item/<id>')
-def item_id():
-    pass
+def item_id(id):
+    # assume the server time is the current time
+    server_time = datetime.now()
+    # get the item id from the request URL
+   
+   
+    # item_id = request.args.get('id')
+    item_id=id
+   
+    # get the start and end timestamps from the request URL
+    # use default values if not provided
+    t1 = request.args.get('from', datetime.strftime(server_time, '%Y%m01000000'))
+    t2 = request.args.get('to', datetime.strftime(server_time, '%Y%m%d%H%M%S'))
+    # convert the timestamps to datetime objects
+    t1 = datetime.strptime(t1, '%Y%m%d%H%M%S')
+    t2 = datetime.strptime(t2, '%Y%m%d%H%M%S')
+    conn = connection.get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, truckTara FROM transactions WHERE truck= %s", (item_id))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    # if rows[0] ==None:
+    #     conn = connection.get_connection()
+    #     cur = conn.cursor()
+    #     cur.execute("SELECT id FROM containers_registered WHERE container_id = %s", (item_id))
+    #     rows = cur.fetchall()
+    #     cur.close()
+    #     conn.close()
+    if rows[0]==None:
+        return 404
+    # retrieve the item from the database
+    # item = db.get_item(item_id)
+    conn = connection.get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM transactions WHERE id=%s" ,(row[0]))
+    resultSes = cur.fetchall()
+    cur.close()
+    conn.close()
+    data=[]
+    for row in rows:
+        data.append({
+            'id':item_id,
+            'truckTara': row[1],
+            'session' : jsonify(resultSes)
+            })
+    return jsonify(data)
 
 
 # GET /session/<id> (weighing report)
