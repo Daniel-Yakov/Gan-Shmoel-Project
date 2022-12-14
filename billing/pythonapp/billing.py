@@ -1,9 +1,16 @@
 from flask import Flask, jsonify,request, send_file
 from database import *
 import shutil
+import requests
+import os
 
 #create flask
 app = Flask(__name__)
+
+# port specified
+app_port = int(os.environ['BILLING_APP_PORT'])
+weight_port = int(os.environ['WEIGHT_APP_PORT'])
+
 
 # create database connection with 'database' class
 DB=DataBase("billdb", "root")
@@ -73,7 +80,7 @@ def updateFile():
 
 
 # method to create a new truck
-@app.route("/truck?id=i&plate=p", methods=["POST"])
+@app.route("/truck", methods=["POST"])
 def addTruck():    
     id = request.args.get('id')
     plate = request.args.get('plate')
@@ -96,6 +103,15 @@ def changIDtruck(id):
     return jsonify(success=Truck)
 
 
-
+@app.route("/bill/<id>", methods=["GET"])
+def getBill(id):
+    weight_list = requests.get(f"http://localhost:{weight_port}/weight?from=t1&to=t2").json()
+    my_id = id
+    name  = DB.GetProviderByID(id)
+    start = request.args.get('from')
+    end = request.args.get('to')
+    
+    
+    
 if __name__=="__main__":
     app.run(host="0.0.0.0",debug=True)

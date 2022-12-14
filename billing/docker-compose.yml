@@ -2,14 +2,14 @@ version: '3.3'
 
 services:
   
-  mysql:
+  billmysql:
     build: ./mysql/
     restart: always
     environment:
       MYSQL_DATABASE: 'billdb'
       MYSQL_ROOT_PASSWORD: 'root'
-    ports:
-      - '3306:3306'
+    # ports:
+    #   - ${MYSQL_BILLING_PORT}:3306
     volumes:
       - mysql-data:/var/lib/mysql/
     healthcheck: 
@@ -20,8 +20,11 @@ services:
   
   pythonapp:
     build: ./pythonapp/
+    environment:
+      - WEIGHT_APP_PORT=${WEIGHT_APP_PORT}
+      - BILLING_APP_PORT=${BILLING_APP_PORT}
     ports:
-      - 8089:5000
+      - ${BILLING_APP_PORT}:5000
     volumes:
       - type: bind
         source: ./pythonapp/in/
@@ -33,7 +36,7 @@ services:
           nocopy: true
     command: sh -c "python3 billing.py"
     depends_on:
-      mysql:
+      billmysql:
         condition: service_healthy  
 
 volumes:
