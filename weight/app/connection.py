@@ -29,7 +29,7 @@ def get_connection():
 
 def db_health_check():
     try:
-        with connection.cursor() as cursor:
+        with get_connection().cursor() as cursor:
             sql = "select 1"
             cursor.execute(sql)
         return True

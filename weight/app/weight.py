@@ -110,7 +110,7 @@ def transaction_post():
         my_id=transaction_id[0]
         return jsonify({"id":my_id, "truck": truck, "bruto": tweight, "truckTara": truckTaraVal, "neto":netoVal})
         # return jsonify(transaction_id[0])
-    else:
+    elif direction == "in":
         conn = connection.get_connection()
         cur = conn.cursor()
         query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{tweight}')"
@@ -129,7 +129,8 @@ def transaction_post():
         my_id=transaction_id[0]
         return jsonify({"id":my_id, "truck": truck, "bruto": tweight})
         # return jsonify(transaction_id[0])
-       
+    else:
+        return "ERROR", 404
         ####################################################################################
 # POST /batch-weight (called by admin)
 
@@ -270,11 +271,12 @@ def item_id(id):
         conn.close()
     
     
-        if my_truckTara is type==int:
+        if isinstance(my_truckTara, int): 
             Tara=int(my_truckTara)
         else:
             Tara="na"
         ses_data=[]
+        #עובדד אבל הסשן לא מוציא את הערך המבוקש
         for row in resultSes:
             ses_data.append({
                 'time' : row[1],
@@ -375,13 +377,15 @@ def health():
 
     page = requests.get(test_url)
     status = str(page.status_code)
-    print(True)
-    if status == "200":
-        # if(conncetion.db_health_check() and status == "200"):
-        return "OK " + status
-    else:
-        return "BAD " + status
+    isconnect=connection.db_health_check()
+    
 
+    if( isconnect and status == "200"):
+        return jsonify("APP ON AIR")
+    elif status == "200":
+        return jsonify("OK " + status+" & BAD Connection")
+    else :
+        return jsonify(status)
 
 if __name__ == "__main__":
     app_w.run(host="0.0.0.0", debug=True)
