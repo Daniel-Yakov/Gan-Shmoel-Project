@@ -2,8 +2,8 @@
 
 # pull the new version to be tested
 git init
-git remote add origin https://github.com/Daniel-Yakov/test-env.git
-git pull origin main
+git remote add origin https://github.com/Daniel-Yakov/Gan-Shmoel-Project.git
+git pull origin weight
 
 # create the containers with docker compose
 
@@ -15,8 +15,8 @@ docker-compose -f ./weight/docker-compose.yaml build --no-cache
 docker-compose -f ./weight/docker-compose.yaml up -d
 
 # billing app
-docker-compose -f ./billing/docker-compose.yml build --no-cache
-docker-compose -f ./billing/docker-compose.yml up -d
+# docker-compose -f ./billing/docker-compose.yml build --no-cache
+# docker-compose -f ./billing/docker-compose.yml up -d
 
 
 # run tests
