@@ -21,5 +21,7 @@ docker-compose -f ./billing/docker-compose.yml up -d
 
 # run tests
 
-
+# chmod +x /ci/billing/test.sh
+# /ci/billing/test.sh
+# echo $?
 
