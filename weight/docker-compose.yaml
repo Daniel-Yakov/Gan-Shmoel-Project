@@ -30,4 +30,8 @@ services:
 volumes:
   weight_sql:
     driver: local
-  
+
+networks:
+  default:
+    external:
+      name: ${NETWORK}
