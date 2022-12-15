@@ -1,5 +1,7 @@
 #!/bin/sh
 
-docker-compose -f ./weight/docker-compose.yaml down -v
-docker-compose -f ./billing/docker-compose.yml down -v
+docker-compose -f ./weight/docker-compose-w-test.yml -p test down -v
+docker-compose -f ./billing/docker-compose-b-test.yml -p test down -v
+
+rm -rf ./weight/docker-compose-w-test.yml ./billing/docker-compose-b-test.yml
 
