@@ -54,6 +54,7 @@ def trigger():
     # success, deploy new containers in prod-env
     if exit_code == 0:
       subprocess.call('./prod-env.sh')
+      succeed_email()
        
     # failure
     else:
