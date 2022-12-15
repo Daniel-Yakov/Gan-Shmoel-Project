@@ -54,7 +54,7 @@ def check_direction(direction, truck, force):
         else:
             return True
     elif direction == "out" and res == "in" and lastID is not None and lastInID is not None :
-        if force:
+        if force:######################################################
             return False
         else:
             return True
