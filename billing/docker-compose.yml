@@ -1,6 +1,7 @@
 version: '3.3'
 
 services:
+
   
   billmysql:
     build: ./mysql/
@@ -43,3 +44,9 @@ volumes:
   mysql-data:
     driver: local
   backups:
+
+networks: 
+  default: 
+    external: 
+      name: ${NETWORK}
+    
