@@ -46,24 +46,22 @@ def health_check():
 def trigger():
 
     data = json.loads(request.data)
-    print(f'repository.branches_url={data["repository"]}')
-
-    # print(data["repository.branches_url"])
-    
-    # # create test-env
-    # exit_code = subprocess.call('./test-env.sh')
-    
-    # # removes the test-env
-    # subprocess.call('./remove-test-env.sh')
-    
-    # # success, deploy new containers in prod-env
-    # if exit_code == 0:
-    #   subprocess.call('./prod-env.sh')
-    #   succeed_email()
-       
-    # # failure
-    # else:
-    #     fail_email()
+    if data['ref'] == 'refs/heads/main':
+        
+        # create test-env
+        exit_code = subprocess.call('./test-env.sh')
+        
+        # removes the test-env
+        subprocess.call('./remove-test-env.sh')
+        
+        # success, deploy new containers in prod-env
+        if exit_code == 0:
+            subprocess.call('./prod-env.sh')
+            succeed_email()
+        
+        # failure
+        else:
+            fail_email()
 
     return "OK"
 
