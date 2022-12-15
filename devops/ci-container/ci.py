@@ -46,7 +46,7 @@ def health_check():
 def trigger():
 
     data = json.loads(request.data)
-    print(f'repository.branches_url={data["repository.branches_url"]}')
+    print(f'repository.branches_url={data["repository"]}')
 
     # print(data["repository.branches_url"])
     
