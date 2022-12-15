@@ -45,7 +45,7 @@ def health_check():
 @app.post('/trigger')
 def trigger():
 
-    data = json.loads(request)
+    data = json.loads(request.data)
     print(f'repository.branches_url={data["repository.branches_url"]}')
 
     # print(data["repository.branches_url"])
