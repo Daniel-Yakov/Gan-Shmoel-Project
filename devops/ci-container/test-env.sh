@@ -9,14 +9,15 @@ git pull origin weight
 
 export WEIGHT_APP_PORT=8081
 export BILLING_APP_PORT=8082
+export NETWORK=test-env
 
 # weight app
 docker-compose -f ./weight/docker-compose.yaml build --no-cache
 docker-compose -f ./weight/docker-compose.yaml up -d
 
 # billing app
-# docker-compose -f ./billing/docker-compose.yml build --no-cache
-# docker-compose -f ./billing/docker-compose.yml up -d
+docker-compose -f ./billing/docker-compose.yml build --no-cache
+docker-compose -f ./billing/docker-compose.yml up -d
 
 
 # run tests
@@ -24,4 +25,6 @@ docker-compose -f ./weight/docker-compose.yaml up -d
 # chmod +x /ci/billing/test.sh
 # /ci/billing/test.sh
 # echo $?
+
+# docker create network test
 

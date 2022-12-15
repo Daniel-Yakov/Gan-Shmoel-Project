@@ -44,14 +44,12 @@ def health_check():
 
 @app.post('/trigger')
 def trigger():
-    fail_email()
     
-
-    #exit_code = subprocess.call('./test-env.sh')
+    exit_code = subprocess.call('./test-env.sh')
     
     # success
-   # if exit_code == 0:
-      
+    if exit_code == 0:
+      subprocess.call('./prod-env-1.sh')
        
 
     
@@ -66,7 +64,7 @@ def trigger():
     
     # data = json.loads(request)
     # print(f'action = {data["action"]}, repository.branches_url={data["repository.branches_url"]}')
-    return "Mail has been sent to you, go check it !"
+    return "OK"
 
 
 app.run(host="0.0.0.0")
