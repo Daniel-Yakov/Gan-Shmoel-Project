@@ -1,4 +1,4 @@
-from flask import Flask, jsonify,request, send_file
+from flask import Flask, jsonify,request, send_file,render_template
 from database import *
 import shutil
 import requests
@@ -10,7 +10,7 @@ app = Flask(__name__)
 # port specified
 app_port = int(os.environ['BILLING_APP_PORT'])
 weight_port = int(os.environ['WEIGHT_APP_PORT'])
-
+app.config["JSON_SORT_KEYS"] = False
 
 # create database connection with 'database' class
 DB=DataBase("billdb", "root")
@@ -108,9 +108,9 @@ def Gettruck(id):
     to= request.args.get('to')
     if DB.CheckForTruckID(id)==None:
         return jsonify("Truck not found"),404 
-    
+
     truckID=int(DB.CheckForTruckID(id)[0][0])
-    #WEIGH= requests.get(f"http://localhost:{weight_port}/health?from={From}&to={to}").json()
+    #WEIGH= requests.get(f"http://localhost:{WEIGHT_APP_PORT}/item").json()
     WEIGH=[{ "id": 10001, "session": [ { "time": "Wed, 14 Dec 2022 09:55:38 GMT","weight": "T-14409"}]}]
     
     return WEIGH
@@ -122,12 +122,68 @@ def Gettruck(id):
 
 @app.route("/bill/<id>", methods=["GET"])
 def getBill(id):
-    weight_list = requests.get(f"http://localhost:{weight_port}/weight?from=t1&to=t2").json()
-    my_id = id
     name  = DB.GetProviderByID(id)
     start = request.args.get('from')
     end = request.args.get('to')
     
+    truckList=DB.get_Truck_By_Provider_ID(id)
+    provider_trucks = ""
+    for tr in truckList:
+        provider_trucks+=f"{tr[0]} "
+    truckList = set()
+    
+    sessionCount=0
+    products=[]
+    # url = f"http://<weight_domain_name>:{weight_port}/weight?from={start}&to={end}"
+    url = f"http://localhost:5000/weight"
+    weight_list = requests.get(url).json()
+
+    for ses in weight_list:
+        if str(ses["id"]) in provider_trucks:
+            sessionCount+=1
+            truckList.add(ses["id"])
+            already_exist = False
+            for n in products:
+                if n["product"] == ses["produce"]:
+                    already_exist = True
+                    n["count"] = str(int(n["count"])+1)
+                    n["amount"] += (ses["bruto"])
+                    n["pay"] = n["amount"]*n["rate"]
+                    break
+            
+            if already_exist:
+                continue
+            else:
+                
+                new_product = {"product":ses["produce"], 
+                               "count": "1",
+                               "amount": ses["bruto"],
+                               "rate": DB.get_rate_from_product(ses["produce"],id)[0][0],
+                               "pay": ses["bruto"]*DB.get_rate_from_product(ses["produce"],id)[0][0]
+                               }
+                products.append(new_product)
+    
+    total = 0
+    for prod in products:
+        total += prod["pay"]
+    
+    bill = {"id":id,
+            "name":name,
+            "from":start,
+            "to": end,
+            "truckCount":len(truckList),
+            "sessionCount":sessionCount,
+            "products":products,
+            "total":total
+            }
+
+    return jsonify(bill)
+
+
+# # in case that weight service is not ready a deadline
+@app.route("/weight", methods=["GET"])
+def my_try():
+    return  render_template("test.json")  
     
     
 if __name__=="__main__":

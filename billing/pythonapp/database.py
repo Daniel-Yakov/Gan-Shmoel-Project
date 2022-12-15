@@ -42,7 +42,7 @@ class DataBase:
         sql=f"SELECT id FROM Provider WHERE name='{name}';"
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
-        return result
+        return result[0][0]
     
     
     def GetProviderByID(self,id):
@@ -91,3 +91,20 @@ class DataBase:
             return None
         return result       
         
+    
+    def get_Truck_By_Provider_ID(self, id):
+        sql=f"SELECT id FROM Trucks WHERE provider_id='{id}';"
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+        return result
+
+    
+    def get_rate_from_product(self, product, id):
+        sql = f"SELECT rate FROM Rates WHERE scope='{id}' and product_id='{product}';"
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+        if len(result) == 0:
+            sql = f"SELECT rate FROM Rates WHERE scope='all' and product_id='{product}';"
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+        return result

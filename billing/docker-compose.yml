@@ -9,8 +9,6 @@ services:
     environment:
       MYSQL_DATABASE: 'billdb'
       MYSQL_ROOT_PASSWORD: 'root'
-    # ports:
-    #   - ${MYSQL_BILLING_PORT}:3306
     volumes:
       - mysql-data:/var/lib/mysql/
     healthcheck: 
@@ -47,6 +45,5 @@ volumes:
 
 networks: 
   default: 
-    external: 
-      name: ${NETWORK}
-    
+    name: ${NETWORK}
+    external: true

@@ -1,0 +1,58 @@
+[
+    {
+        "bruto": 10,
+        "containers": ["3"],
+        "direction": "out",
+        "id": 10001,
+        "neto": 0,
+        "produce": "banana"
+    },
+    {
+        "bruto": 11,
+        "containers": ["4"],
+        "direction": "out",
+        "id": 10001,
+        "neto": 0,
+        "produce": "apple"
+    },
+    {
+        "bruto": 12,
+        "containers": ["5"],
+        "direction": "out",
+        "id": 10002,
+        "neto": 0,
+        "produce": "orange"
+    },
+    {
+        "bruto": 13,
+        "containers": ["5"],
+        "direction": "out",
+        "id": 10002,
+        "neto": 0,
+        "produce": "apple"
+    },
+    {
+        "bruto": 12,
+        "containers": ["5"],
+        "direction": "out",
+        "id": 10002,
+        "neto": 0,
+        "produce": "orange"
+    },
+    {
+        "bruto": 12,
+        "containers": ["5"],
+        "direction": "out",
+        "id": 97654,
+        "neto": 0,
+        "produce": "orange"
+    },
+    {
+        "bruto": 12,
+        "containers": ["5"],
+        "direction": "out",
+        "id": 65456,
+        "neto": 0,
+        "produce": "orange"
+    }
+]
