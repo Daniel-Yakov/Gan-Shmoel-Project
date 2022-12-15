@@ -110,10 +110,17 @@ def Gettruck(id):
         return jsonify("Truck not found"),404 
 
     truckID=int(DB.CheckForTruckID(id)[0][0])
-    #WEIGH= requests.get(f"http://localhost:{WEIGHT_APP_PORT}/item").json()
-    WEIGH=[{ "id": 10001, "session": [ { "time": "Wed, 14 Dec 2022 09:55:38 GMT","weight": "T-14409"}]}]
-    
-    return WEIGH
+    #WEIGH= requests.get(f"http://localhost:{WEIGHT_APP_PORT}/item?from={From}&to={to}").json()
+    WEIGH=[ { "id": "T-3", "session": [ { "bruto": 200, "containers": "None", "datetime": "Thu, 15 Dec 2022 11:17:30 GMT", "direction": "out", "id": 10027, "neto": 0, "produce": "apple", "truck": "T-3", "truckTara": 200 }, { "bruto": 200, "containers": "None", "datetime": "Thu, 15 Dec 2022 11:17:53 GMT", "direction": "out", "id": 10028, "neto": 0, "produce": "apple", "truck": "T-3", "truckTara": 200 } ], "tara": "na" } ]
+    id=WEIGH[0]['id']
+    tara=WEIGH[0]['session'][0]['truckTara']
+    session=WEIGH[0]['session']
+    result={'ID':id,
+            'tara':tara,
+            'session':session
+        }
+    return jsonify(result)
+
 
 
 
@@ -134,7 +141,7 @@ def getBill(id):
     
     sessionCount=0
     products=[]
-    # url = f"http://<weight_domain_name>:{weight_port}/weight?from={start}&to={end}"
+    url = f"http://<weight_domain_name>:{weight_port}/weight?from={start}&to={end}"
     url = f"http://localhost:5000/weight"
     weight_list = requests.get(url).json()
 
@@ -176,8 +183,8 @@ def getBill(id):
             "products":products,
             "total":total
             }
-
-    return jsonify(bill)
+    products=bill['products']
+    return render_template('bill.html',products=products,total=total)
 
 
 # # in case that weight service is not ready a deadline
