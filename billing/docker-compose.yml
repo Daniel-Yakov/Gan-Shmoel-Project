@@ -26,7 +26,7 @@ services:
       - ${BILLING_APP_PORT}:5000
     volumes:
       - type: bind
-        source: ./billing/pythonapp/in/
+        source: ./pythonapp/in/
         target: /in/
       - type: volume
         source: backups
