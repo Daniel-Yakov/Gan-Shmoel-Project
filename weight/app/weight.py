@@ -48,8 +48,31 @@ def check_direction(direction, truck, force):
     elif direction == "in" and res == "out":
         return True
 
-# POST /weight (called by new weight)
 
+def isIn(truck):
+    conn = connection.get_connection()
+    cur = conn.cursor()
+    # Checks the last id of a transaction of a truck
+    query1 = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}'"
+    cur.execute(query1)
+    lastID = cur.fetchone()
+    cur.close()
+    conn.close()
+    conn = connection.get_connection()
+    cur = conn.cursor()
+    # Checks the last id of a transaction of a truck headed in
+    query2 = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}' and direction='in'"
+    cur.execute(query2)
+    lastInID = cur.fetchone()
+    cur.close()
+    conn.close()
+    direction = str(direction)
+    if lastID == lastInID:
+        return True
+    else:
+        return False
+
+# POST /weight (called by new weight)
 @app_w.post('/weight')
 def transaction_post():
     # get data from request
@@ -85,7 +108,7 @@ def transaction_post():
     if truck is None:
         truck = "na"
 
-    if check_direction(direction, truck, force):
+    if not check_direction(direction, truck, force):#מחזירה שקר אם יש בעיה בכיוונים
         return "Error"
     elif force:
         # Overwrite the existing row with a new POST request
@@ -101,11 +124,19 @@ def transaction_post():
         if direction == "in":
             query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}', bruto='{weight}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
         elif direction == "out":
+            truckTaraVal = weight  # Weight of truck
+            query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in' <(SELECT MAX(id) AS max_id FROM transactions)"
+            cur.execute(query)
+            total_weight = cur.fetchone()
+            conn.close()
+            cur.close()
+            netoVal = int(total_weight[0]-total_weight_containers - truckTaraVal)
             query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}', bruto='{weight}',truckTara='{truckTaraVal}', neto='{netoVal}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
-        cur.execute(query)
-        cur.close()
-        conn.close()
-        return "Last transaction was successfully overwritten"
+            cur.execute(query)
+            cur.close()
+            conn.close()
+
+            return jsonify({"id": my_id, "truck": truck, "bruto": weight, "truckTara": truckTaraVal, "neto": netoVal})
 
     # if all the checks pass, start recording data
     conn = connection.get_connection()
