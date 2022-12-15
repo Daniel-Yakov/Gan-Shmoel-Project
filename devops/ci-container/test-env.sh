@@ -11,16 +11,28 @@ export WEIGHT_APP_PORT=8081
 export BILLING_APP_PORT=8082
 export NETWORK=test-env
 
+#  create test-env docker-compose files
+cp ./weight/docker-compose.yaml ./weight/docker-compose-w-test.yml
+cp ./billing/docker-compose.yml ./billing/docker-compose-b-test.yml
+
 # weight app
-docker-compose -f ./weight/docker-compose.yaml build --no-cache
-docker-compose -f ./weight/docker-compose.yaml up -d
+# docker-compose -f ./weight/docker-compose.yaml build --no-cache
+# docker-compose -f ./weight/docker-compose.yaml up -d
+
+docker-compose -f ./weight/docker-compose-w-test.yml build --no-cache
+docker-compose -f ./weight/docker-compose-w-test.yml up -d
 
 # billing app
-docker-compose -f ./billing/docker-compose.yml build --no-cache
-docker-compose -f ./billing/docker-compose.yml up -d
+# docker-compose -f ./billing/docker-compose.yml build --no-cache
+# docker-compose -f ./billing/docker-compose.yml up -d
 
+docker-compose -f ./billing/docker-compose-b-test.yml build --no-cache
+docker-compose -f ./billing/docker-compose-b-test.yml up -d
 
 # run tests
+
+
+rm -rf ./weight/docker-compose-w-test.yml ./billing/docker-compose-b-test.yml
 
 exit 0
 
