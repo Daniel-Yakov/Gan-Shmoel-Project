@@ -13,7 +13,43 @@ def home():
     pass
 
 
+def check_direction(direction, truck, force):
+    conn = connection.get_connection()
+    cur = conn.cursor()
+    # Checks the last id of a transaction of a truck
+    query1 = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}'"
+    cur.execute(query1)
+    lastID = cur.fetchone()
+    cur.close()
+    conn.close()
+    conn = connection.get_connection()
+    cur = conn.cursor()
+    # Checks the last id of a transaction of a truck headed in
+    query2 = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}' and direction='in'"
+    cur.execute(query2)
+    lastInID = cur.fetchone()
+    cur.close()
+    conn.close()
+    direction = str(direction)
+    if lastID == lastInID:
+        res = "in"
+    else:
+        res = "out"
+    if direction == "in" and res == "in":
+        if force:
+            return True
+        else:
+            return False
+    elif direction == "out" and res == "out":
+        if force:
+            return True
+        else:
+            return False
+    elif direction == "in" and res == "out":
+        return True
+
 # POST /weight (called by new weight)
+
 @app_w.post('/weight')
 def transaction_post():
     # get data from request
@@ -21,44 +57,61 @@ def transaction_post():
     direction = req_data.get('direction')
     truck = req_data.get('truck')
     containers = req_data.get('containers')
-    tweight = int(req_data.get('weight'))
-    #unit = req_data.get('unit')
-    # force = req_data.get('force')
+    weight = int(req_data.get('weight'))
+    unit = req_data.get('unit')
+    force = req_data.get('force')
     produce = req_data.get('produce')
 
-    ####################################################### BAG לבדוק מה קורה שלא שולחים כלום 
+    # BAG לבדוק מה קורה שלא שולחים כלום
     # check if all the required fields are present
-    if (direction == None or tweight == None or produce == None):
-        return "Missing parameters!", 400
-
-    # check if truck is provided if weighing a truck
-    if (direction == "in" or direction == "out") and truck == None:
-        return "Missing truck parameter!", 400
-
-    # check if containers are provided if weighing a container
-    if (direction == "none" and containers == None):
-        return "Missing containers parameter!", 400
-
-    # check if force is true/false
-    # if not force:
-    #     force=False
-    # check if direction is "in", "out" or "none"
-    if (direction != "in" and direction != "out" and direction != "none"):
+    if direction not in ["in", "out", "none"]:
         return "Direction should be in/out/none!", 400
 
-    # check if unit is "lbs" or "kg"
-    # if (unit != "lbs" and unit != "kg"):
-    #    return "Unit should be lbs/kg!", 400
+    if unit not in ["lbs", "kg"]:
+        return "Unit should be lbs/kg!", 400
 
-    # check if produce is a valid produce
-    if produce == "":
+    if weight is None:
+        return "Missing weight parameter!", 400
+
+    if containers is None:
+        return "Missing containers parameter!", 400
+
+    if force is None:
+        force = False
+
+    if produce is None:
         produce = "na"
+
+    if truck is None:
+        truck = "na"
+
+    if check_direction(direction, truck, force):
+        return "Error"
+    elif force:
+        # Overwrite the existing row with a new POST request
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        query = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}'"
+        cur.execute(query)
+        resID = cur.fetchone()
+        cur.close()
+        conn.close()
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        if direction == "in":
+            query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}', bruto='{weight}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
+        elif direction == "out":
+            query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}', bruto='{weight}',truckTara='{truckTaraVal}', neto='{netoVal}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
+        cur.execute(query)
+        cur.close()
+        conn.close()
+        return "Last transaction was successfully overwritten"
 
     # if all the checks pass, start recording data
     conn = connection.get_connection()
     cur = conn.cursor()
 
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")  # להכניס לתוך הטבלה
+    timestamp = datetime.now().strftime(r"%Y%m%d%H%M%S")  # להכניס לתוך הטבלה
 
     # generate a unique weight id לשנות את הקוד להשתמש ומזהה דיפולטיבי
     # cur = conn.cursor()
@@ -76,28 +129,33 @@ def transaction_post():
 
     # add data to the DB
     # direction, truck, containers, weight, unit, force, produce
-   
+
     total_weight_containers = 0
 # Iterate through the list of containers_id
     conn = connection.get_connection()
     cur = conn.cursor()
-    listContainers=str(containers).split(",")
+    listContainers = str(containers).split(",")
     for container_id in listContainers:
-        cur.execute("SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
+        cur.execute(
+            "SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
         result = cur.fetchone()
         if result != None:
             total_weight_containers += result[0]
-        else: pass
+        else:
+            pass
     cur.close()
     conn.close()
 
     # return
-    if direction == "out":
-        truckTaraVal=int(tweight-total_weight_containers)
-        netoVal=int(tweight-total_weight_containers-(tweight-total_weight_containers))
+    if direction == "in":
+        # outquery = "SELECT direction FROM transactions WHERE truck is %s", (
+        #     truck)
         conn = connection.get_connection()
         cur = conn.cursor()
-        query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto,truckTara,neto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{tweight}','{truckTaraVal}','{netoVal}')"
+        # cur.execute(outquery)
+        # if cur.fetchone() == :
+        #     pass
+        query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{weight}')"
         # Add a containers after the truck
         cur.execute(query)
         conn.commit()
@@ -106,16 +164,24 @@ def transaction_post():
         conn = connection.get_connection()
         cur = conn.cursor()
         cur.execute("SELECT max(id) FROM transactions ")
-        transaction_id=cur.fetchone()
+        transaction_id = cur.fetchone()[0]
         cur.close()
         conn.close()
-        my_id=transaction_id[0]
-        return jsonify({"id":my_id, "truck": truck, "bruto": tweight, "truckTara": truckTaraVal, "neto":netoVal})
-        # return jsonify(transaction_id[0])
-    elif direction == "in":
+        #my_id = transaction_id[0]
+        return jsonify({"id": transaction_id, "truck": truck, "bruto": weight})
+    elif direction == "out":
+        truckTaraVal = weight  # Weight of truck
         conn = connection.get_connection()
         cur = conn.cursor()
-        query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{tweight}')"
+        query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in' <(SELECT MAX(id) AS max_id FROM transactions)"
+        cur.execute(query)
+        total_weight = cur.fetchone()
+        conn.close()
+        cur.close()
+        netoVal = int(total_weight[0]-total_weight_containers - truckTaraVal)
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto,truckTara,neto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{weight}','{truckTaraVal}','{netoVal}')"
         # Add a containers after the truck
         cur.execute(query)
         conn.commit()
@@ -124,20 +190,18 @@ def transaction_post():
         conn = connection.get_connection()
         cur = conn.cursor()
         cur.execute("SELECT max(id) FROM transactions ")
-        transaction_id=cur.fetchone()
+        transaction_id = cur.fetchone()
         cur.close()
         conn.close()
-
-        my_id=transaction_id[0]
-        return jsonify({"id":my_id, "truck": truck, "bruto": tweight})
+        my_id = transaction_id[0]
+        return jsonify({"id": my_id, "truck": truck, "bruto": weight, "truckTara": truckTaraVal, "neto": netoVal})
         # return jsonify(transaction_id[0])
     else:
         return "ERROR", 404
         ####################################################################################
+
+
 # POST /batch-weight (called by admin)
-
-
-
 @app_w.post('/batch-weight')
 def batchWeight_post():
     pass
@@ -306,18 +370,20 @@ def session_id(id):
     cur = conn.cursor()
 
     cur.execute("SELECT direction from transactions where id =%s",my_id)
-    if cur.fetchone()=="out":
+    my_direction=cur.fetchone()
+    cur.close()
+    conn.close()
+    if my_direction=="out":
         isout=False
     else:
         isout=True
-    cur.close()
-    conn.close()
+ 
 
    
     if isout == False:
         conn = connection.get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id,truck,bruto from transactions where id =%s",my_id)
+        cur.execute("SELECT id,truck,bruto from transactions where id =%s and",my_id )
         row = cur.fetchone()
         cur.close()
         conn.close()
@@ -393,6 +459,7 @@ def health():
     elif status == "200":
         return jsonify("OK " + status+" & BAD Connection")
     else :
+        print(status)
         return jsonify(status)
 
 if __name__ == "__main__":
