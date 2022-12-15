@@ -42,7 +42,7 @@ class DataBase:
         sql=f"SELECT id FROM Provider WHERE name='{name}';"
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
-        return result
+        return result[0][0]
     
     
     def GetProviderByID(self,id):
