@@ -45,25 +45,20 @@ def health_check():
 @app.post('/trigger')
 def trigger():
     
+    # create test-env
     exit_code = subprocess.call('./test-env.sh')
     
-    # success
+    # removes the test-env
+    subprocess.call('./remove-test-env.sh')
+    
+    # success, deploy new containers in prod-env
     if exit_code == 0:
-      subprocess.call('./prod-env-1.sh')
+      subprocess.call('./prod-env.sh')
        
-
-    
-
     # failure
-    #else:
-        #fail_email()
+    else:
+        fail_email()
 
-        
-    
-     
-    
-    # data = json.loads(request)
-    # print(f'action = {data["action"]}, repository.branches_url={data["repository.branches_url"]}')
     return "OK"
 
 

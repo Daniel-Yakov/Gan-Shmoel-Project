@@ -3,7 +3,7 @@
 # pull the new version to be tested
 git init
 git remote add origin https://github.com/Daniel-Yakov/Gan-Shmoel-Project.git
-git pull origin weight
+git pull origin main
 
 # create the containers with docker compose
 
@@ -22,9 +22,5 @@ docker-compose -f ./billing/docker-compose.yml up -d
 
 # run tests
 
-# chmod +x /ci/billing/test.sh
-# /ci/billing/test.sh
-# echo $?
-
-# docker create network test
+exit 0
 
