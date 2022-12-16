@@ -119,20 +119,27 @@ def transaction_post():
 
     total_weight_containers = 0
     # Iterate through the list of containers_id
-    # conn = connection.get_connection()
-    # cur = conn.cursor()
     listContainers = str(containers).split(",")
     for container_id in listContainers:
-
-        # cur.execute(
-        #     "SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
-        query=f"SELECT weight FROM containers_registered WHERE container_id = {container_id}"
-        result = connection.fetchone(query)
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT weight, unit FROM containers_registered WHERE container_id = %s", (container_id))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        notForCalc=False
         if result != None:
-            total_weight_containers += result[0]
-    # cur.close()
-    # conn.close()
+            try:#if no weight or weight =NULL
+                temp=1
+                temp+=result[0]
+            except:
+                notForCalc=True
 
+            if result[1] == "lbs":
+                result = float(result[0]) // 2.2046226218
+            if not notForCalc :
+                total_weight_containers += result
     if check_direction(direction, truck, force) == False:  # מחזירה שקר אם יש בעיה בכיוונים
         return "Error"
     elif force:
@@ -166,8 +173,11 @@ def transaction_post():
             if total_weight is None:
                 return "You're trying to force an update on a transaction with no weight documented"
             total_weight = total_weight[0]
-            netoVal = int(
-                total_weight - total_weight_containers - truckTaraVal)
+            if notForCalc:
+                netoVal="na"
+            else:
+                netoVal = total_weight - total_weight_containers - truckTaraVal
+                netoVal=round(netoVal, 2)
             conn = connection.get_connection()
             cur = conn.cursor()
             query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}',truckTara='{truckTaraVal}', neto='{netoVal}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
@@ -175,7 +185,7 @@ def transaction_post():
             conn.commit()
             cur.close()
             conn.close()
-            return jsonify({"id": resID, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto": netoVal})
+            return jsonify({"id": resID, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto":netoVal})
     # if all the checks pass, start recording data
     conn = connection.get_connection()
     cur = conn.cursor()
@@ -245,7 +255,11 @@ def transaction_post():
         if total_weight is None:
             return "Error"
         total_weight = total_weight[0]
-        netoVal = int(total_weight-total_weight_containers - truckTaraVal)
+        if notForCalc:
+            netoVal="na"
+        else:
+            netoVal = total_weight - total_weight_containers - truckTaraVal
+            netoVal=round(netoVal, 2)
         conn = connection.get_connection()
         cur = conn.cursor()
         query = f"UPDATE transactions SET direction='{direction}', truckTara='{truckTaraVal}', neto='{netoVal}' WHERE truck='{truck}' AND id='{resID}'"
@@ -261,11 +275,16 @@ def transaction_post():
         cur.close()
         conn.close()
         my_id = transaction_id[0]
-        return jsonify({"id": my_id, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto": netoVal})
+        return jsonify({"id": my_id, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto":netoVal})
         # return jsonify(transaction_id[0])
     elif direction == "none":
         conn = connection.get_connection()
         cur = conn.cursor()
+        querylastin = f"SELECT max(id) FROM transaction where truck='{truck}' and direction='in'"
+        cur.execute(querylastin)
+        lastIN = cur.fetchone()
+        if lastIN is not None:
+            return "There's a transaction where truck is heading in, no 'none' direction transaction can be proccessed"
         query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{weight}')"
         cur.execute(query)
         conn.commit()
@@ -291,7 +310,6 @@ def batchWeight_post():
     fext = os.path.splitext(filename)[1]#.csv#.json#
     if passw != 'root':
         return "\nWrong Password\n"
-    # file.save(f'./in/{file.filename}')
     F="./in/"+filename
     try:
         FirstCsv=True
@@ -313,9 +331,9 @@ def batchWeight_post():
                     valist.append((item['id'], item['weight'], item['unit']))
                 unit = valist[0][2]
             else:
-                return "ERRO1"
+                return "file name is not csv/json"
     except:
-        return "ERRO2"
+        return "can't open this file"
     
     allContainer=connection.fetchall('SELECT container_id FROM containers_registered')#############
     # return jsonify(allContainer)
@@ -383,9 +401,19 @@ def unknown():
     sql = "SELECT container_id FROM containers_registered WHERE weight IS NULL"
     cur.execute(sql)
     unknown_containers = cur.fetchall()
+    try:
+        if unknown_containers[0] is None:
+            return "No unknow Containers"
+    except:
+        return "No unknow Containers"
     cur.close()
     conn.close()
-    return "".join(str(unknown_containers))
+    myRes=[]
+    for conta in unknown_containers:
+        myRes.append((list(conta)))
+    myRes = [item for sublist in myRes for item in sublist]# O(n*m)
+    return myRes
+
 
 
 # GET /weight (report by time)
@@ -416,7 +444,10 @@ def transaction_get():
             'neto': row[3],
             'produce': row[4],
             'containers': str(row[5]).split(',')}) #לעשות משהו אחר אם קורה שאין IN
-        return jsonify(data)
+        if len(data) == 0:
+            return "No Session"    
+        else:
+            return jsonify(data)
     else:
         # create a connection to the DB
         conn = connection.get_connection()
@@ -442,7 +473,10 @@ def transaction_get():
 
 #    cur.close()
 #   conn.close()
-    return jsonify(data)
+    if len(data) == 0:
+            return "No Session"    
+    else:
+        return jsonify(data)
 
 
 
@@ -450,13 +484,11 @@ def transaction_get():
 # GET /item/<id> (truck/container report)
 @app_w.get('/item/<id>')#####################בדיקה לאחר פוסט
 def item_id(id):
-    # assume the server time is the current time
+    
     server_time = datetime.now()
-    # get the item id from the request URL
-    # item_id = request.args.get('id')
+    
     item_id=id
-    # get the start and end timestamps from the request URL
-    # use default values if not provided
+   
     t1 = request.args.get('from', datetime.strftime(server_time, '%Y%m01000000'))
     t2 = request.args.get('to', datetime.strftime(server_time, '%Y%m%d%H%M%S'))
     # convert the timestamps to datetime objects
@@ -468,7 +500,7 @@ def item_id(id):
     ListofTuple= cur.fetchall()#######################
     cur.close()
     conn.close()
-    
+    ### IStruck
     if ListofTuple is not None:
         listRes=[]
         myID=[]
@@ -488,8 +520,9 @@ def item_id(id):
             
         
         for i in listOfIDs:
-            my_res={"id":i[0],"datetime":i[1],"direction":i[2],"truck":i[3],"containers":i[4],"bruto":i[5],"truckTara":i[6],"neto":i[7],"produce":i[8]}
-            listRes.append(my_res)
+            listRes.append(i[0])
+            # my_res={"id":i[0],"datetime":i[1],"direction":i[2],"truck":i[3],"containers":i[4],"bruto":i[5],"truckTara":i[6],"neto":i[7],"produce":i[8]}
+            # listRes.append(my_res)############
         
         ##direction='in'"
         listOfIDs=[]
@@ -504,13 +537,18 @@ def item_id(id):
             conn.close()
           
         for i in listOfIDs:
-            my_res={"id":i[0],"direction":i[2],"truck":i[3],"bruto":i[5]}
-            listRes.append(my_res)
-        
-        
-        
-        return jsonify(listRes)
+            listRes.append(i[0])
+            # my_res={"id":i[0],"direction":i[2],"truck":i[3],"bruto":i[5]}###########
+            # listRes.append(my_res)
 
+        
+        Tara=connection.fetchone(query=f"SELECT truckTara FROM transactions WHERE truck='{item_id}' and direction ='out' and id =(SELECT MAX(id) AS max_id FROM transactions WHERE truck='{item_id}')")
+        return jsonify(Tara)
+        if Tara is None:Tara="na"
+        return Tara
+        return jsonify({"id":item_id,"tara":Tara,"sessions":listRes})
+    else:
+        connection.fetchone(query="SELECT id FROM containers_registered WHERE container_id = '{item_id}'")
 
 
 
