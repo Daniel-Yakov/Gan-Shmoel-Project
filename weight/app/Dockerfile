@@ -3,6 +3,7 @@ FROM python
 RUN apt update && apt install vim -y && apt install iputils-ping -y
 # Installs Flask module, pymysql and cryptography modules, along with upgrading pip
 COPY . .
+COPY ./in /in
 RUN pip install cryptography
 RUN pip install --upgrade pip
 RUN pip install -r req.txt

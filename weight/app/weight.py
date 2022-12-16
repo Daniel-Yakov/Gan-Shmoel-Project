@@ -37,6 +37,7 @@ def check_direction(direction, truck, force):
         return True
     else:
         res = "out"
+
     if direction == "in" and res == "in":
         if force:
             return True
@@ -54,13 +55,14 @@ def check_direction(direction, truck, force):
     else:
         return True
 
-def isIn(truck,direction):
+
+def isIn(truck, direction):
     conn = connection.get_connection()
     cur = conn.cursor()
     # Checks the last id of a transaction of a truck
     query1 = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}'"
     cur.execute(query1)
-    lastID = cur.fetchone()
+    lastID = cur.fetchone()[0]
     cur.close()
     conn.close()
     conn = connection.get_connection()
@@ -68,16 +70,18 @@ def isIn(truck,direction):
     # Checks the last id of a transaction of a truck headed in
     query2 = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}' and direction='in'"
     cur.execute(query2)
-    lastInID = cur.fetchone()
+    lastInID = cur.fetchone()[0]
     cur.close()
     conn.close()
     direction = str(direction)
-    if lastID == lastInID: ###############3and lastID is not None:
+    if lastID == lastInID:  # 3and lastID is not None:
         return True
     else:
         return False
 
 # POST /weight (called by new weight)
+
+
 @app_w.post('/weight')
 def transaction_post():
     # get data from request
@@ -85,7 +89,7 @@ def transaction_post():
     direction = req_data.get('direction')
     truck = req_data.get('truck')
     containers = req_data.get('containers')
-    weight = int(req_data.get('weight'))
+    weight = req_data.get('weight')
     unit = req_data.get('unit')
     force = req_data.get('force')
     produce = req_data.get('produce')
@@ -124,8 +128,6 @@ def transaction_post():
         result = cur.fetchone()
         if result != None:
             total_weight_containers += result[0]
-        else:
-            pass
     cur.close()
     conn.close()
 
@@ -140,33 +142,38 @@ def transaction_post():
         resID = cur.fetchone()[0]
         cur.close()
         conn.close()
-        conn = connection.get_connection()
-        cur = conn.cursor()
         if direction == "in" and isIn(truck, direction):
+            conn = connection.get_connection()
+            cur = conn.cursor()
             query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}', bruto='{weight}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
             cur.execute(query)
             conn.commit()
             cur.close()
             conn.close()
             return jsonify({"id": resID, "truck": truck, "bruto": weight})
-        elif direction == "out": ########OUT הוא בעייתי בגלל הוא מקבל אחרי אין רק עם יש פורס
+        elif direction == "out":
+            conn = connection.get_connection()
+            cur = conn.cursor()
             truckTaraVal = weight  # Weight of truck
-            query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in' <(SELECT MAX(id) AS max_id FROM transactions)"
+            # <(SELECT MAX(id) AS max_id FROM transactions)"
+            query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in'"
             cur.execute(query)
-            total_weight = cur.fetchone()[0]
+            total_weight = cur.fetchone()
             conn.close()
             cur.close()
+            if total_weight is None:
+                return "You're trying to force an update on a transaction with no weight documented"
+            total_weight = total_weight[0]
             netoVal = int(
                 total_weight - total_weight_containers - truckTaraVal)
             conn = connection.get_connection()
             cur = conn.cursor()
-            query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}', bruto='{weight}',truckTara='{truckTaraVal}', neto='{netoVal}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
+            query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}',truckTara='{truckTaraVal}', neto='{netoVal}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
             cur.execute(query)
             conn.commit()
             cur.close()
             conn.close()
             return jsonify({"id": resID, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto": netoVal})
-
     # if all the checks pass, start recording data
     conn = connection.get_connection()
     cur = conn.cursor()
@@ -191,9 +198,9 @@ def transaction_post():
     # direction, truck, containers, weight, unit, force, produce
 
     # return
-    if direction == "in" and isIn(truck, direction):
+    if direction == "in":
         # outquery = "SELECT direction FROM transactions WHERE truck is %s", (
-        #     truck)################# אין לא עובד עם אחרי אוט
+        #     truck)
         conn = connection.get_connection()
         cur = conn.cursor()
         # cur.execute(outquery)
@@ -207,16 +214,17 @@ def transaction_post():
         conn.close()
         conn = connection.get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT max(id) FROM transactions where truck='{truck}'")
+        cur.execute(f"SELECT max(id) FROM transactions where truck='{truck}'")
         transaction_id = cur.fetchone()[0]
         cur.close()
         conn.close()
         #my_id = transaction_id[0]
         return jsonify({"id": transaction_id, "truck": truck, "bruto": weight})
     # and isIn(truck,direction)==False############################:
-    elif direction == "out" and isIn(truck, direction) == False:  # Force
+    # and isIn(truck, direction) == False:  # Force ##### Gives error when trying to update an IN transaction
+    elif direction == "out":
         conn = connection.get_connection()
-        cur = conn.cursor()######################בעיה עם אוט לא נכנס אלא עם זה פורס
+        cur = conn.cursor()
         query = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}'"
         cur.execute(query)
         resID = cur.fetchone()[0]
@@ -228,9 +236,13 @@ def transaction_post():
         # <(SELECT MAX(id) AS max_id FROM transactions)"
         query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in'"
         cur.execute(query)
-        total_weight = cur.fetchone()[0]####################TypeError: 'NoneType' object is not subscriptable
+        # total_weight query gives a Type Error when 2 OUT's in a row without a force - instead of a customized error message
+        total_weight = cur.fetchone()
         conn.close()
         cur.close()
+        if total_weight is None:
+            return "Error"
+        total_weight = total_weight[0]
         netoVal = int(total_weight-total_weight_containers - truckTaraVal)
         conn = connection.get_connection()
         cur = conn.cursor()
@@ -242,13 +254,28 @@ def transaction_post():
         conn.close()
         conn = connection.get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT max(id) FROM transactions")
+        cur.execute(f"SELECT max(id) FROM transactions where truck='{truck}'")
         transaction_id = cur.fetchone()
         cur.close()
         conn.close()
         my_id = transaction_id[0]
         return jsonify({"id": my_id, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto": netoVal})
         # return jsonify(transaction_id[0])
+    elif direction == "none":
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{weight}')"
+        cur.execute(query)
+        conn.commit()
+        cur.close()
+        conn.close()
+        conn = connection.get_connection()
+        cur = conn.cursor()
+        cur.execute(f"SELECT max(id) FROM transactions where truck='{truck}'")
+        transaction_id = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return jsonify({"id": transaction_id, "truck": truck, "bruto": weight})
     else:
         return "ERROR", 404
         ####################################################################################
