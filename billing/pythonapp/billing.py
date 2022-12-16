@@ -16,7 +16,7 @@ app.config["JSON_SORT_KEYS"] = False
 try:
     DB=DataBase("billdb", "root")
 except:
-    time.sleep(5)
+    time.sleep(3)
     DB=DataBase("billdb", "root")
 
 
