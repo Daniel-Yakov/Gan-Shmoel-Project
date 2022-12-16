@@ -4,7 +4,7 @@ SCORE=0
 sleep 1
 echo "STARTING HEALTH TEST"
 sleep 1
-output=$(curl "http://ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:$BILLING_APP_PORT/health")
+output=$(curl "http://ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:$BILLING_APP_PORT/health")
 if [ "$output" = '"OK"' ]; then
     tput setaf 2
     echo "Passed the health assesment"
