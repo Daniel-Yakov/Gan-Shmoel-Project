@@ -24,9 +24,8 @@ docker-compose -f ./billing/docker-compose-b-test.yml build --no-cache
 docker-compose -f ./billing/docker-compose-b-test.yml -p test up -d
 
 # run tests
-
-chmod +x ./billing/test.sh
 ./billing/test.sh > report.txt
+let billing_test=$?
 
-exit 0
+exit $billing_test
 
