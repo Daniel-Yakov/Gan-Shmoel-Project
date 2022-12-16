@@ -1,24 +1,7 @@
 version: '3.3'
 
 services:
-
-  
-  billmysql:
-    build: ./mysql/
-    restart: always
-    environment:
-      MYSQL_DATABASE: 'billdb'
-      MYSQL_ROOT_PASSWORD: 'root'
-    volumes:
-      - mysql-data:/var/lib/mysql/
-    healthcheck: 
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--user=root', '--password=root']
-      interval: 3s
-      timeout: 7s
-      retries: 15
-      start_period: 30s
-  
-  pythonapp:
+pythonapp:
     build: ./pythonapp/
     environment:
       - WEIGHT_APP_PORT=${WEIGHT_APP_PORT}
@@ -39,6 +22,23 @@ services:
       billmysql:
         condition: service_healthy  
 
+
+  
+  billmysql:
+    build: ./mysql/
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'billdb'
+      MYSQL_ROOT_PASSWORD: 'root'
+    volumes:
+      - mysql-data:/var/lib/mysql/
+    healthcheck: 
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--user=root', '--password=root']
+      timeout: 7s
+      retries: 15
+      start_period: 30s
+  
+  
 volumes:
   mysql-data:
     driver: local
