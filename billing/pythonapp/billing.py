@@ -138,7 +138,7 @@ def Gettruck():
     From = request.args.get('From')
     to= request.args.get('to')
     if DB.CheckForTruckID(id)==None:
-        return jsonify("Truck not found"),404 
+        return statement_return("ERROR", "Truck not found", 404)
 
     truckID=int(DB.CheckForTruckID(id)[0][0])
     #WEIGH= requests.get(f"http://localhost:{WEIGHT_APP_PORT}/item?from={From}&to={to}").json()
