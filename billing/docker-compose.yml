@@ -33,7 +33,7 @@ pythonapp:
     volumes:
       - mysql-data:/var/lib/mysql/
     healthcheck: 
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--user=root', '--password=root']
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
       timeout: 7s
       retries: 15
       start_period: 30s
