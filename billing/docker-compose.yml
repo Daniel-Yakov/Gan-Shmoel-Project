@@ -1,7 +1,7 @@
 version: '3.3'
 
 services:
-pythonapp:
+  pythonapp:
     build: ./pythonapp/
     environment:
       - WEIGHT_APP_PORT=${WEIGHT_APP_PORT}
@@ -33,7 +33,7 @@ pythonapp:
     volumes:
       - mysql-data:/var/lib/mysql/
     healthcheck: 
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost',]
       timeout: 7s
       retries: 15
       start_period: 30s
