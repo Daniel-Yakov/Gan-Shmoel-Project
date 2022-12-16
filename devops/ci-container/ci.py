@@ -28,7 +28,7 @@ def succeed_email():
            
   
 def fail_email():
-     msg = Message('Test Status', recipients = ["daniel577000@gmail.co"])
+     msg = Message('Test Status', recipients = ["daniel577000@gmail.com"])
      msg.add_recipient("DavidovDav@outlook.com")
      msg.add_recipient("kareem.smartdoc@gmail.com")
      msg.add_recipient("shoval123055@gmail.com")
