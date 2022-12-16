@@ -1,9 +1,11 @@
-from flask import Flask, jsonify,request, send_file,render_template
+from flask import Flask,Response, jsonify,request, send_file,render_template, make_response
 from database import *
 import shutil
 import requests
 import os
 import time
+
+
 #create flask
 app = Flask(__name__)
 
@@ -20,6 +22,12 @@ except:
     DB=DataBase("billdb", "root")
 
 
+def statement_return(action, content, code):
+    answer = {f"{action}":f"{content}"}
+    answer= jsonify(answer)
+    answer = answer.get_data().decode('utf-8')
+    return make_response(render_template("base.html", answer=answer),code)
+
 
 def my_id_generator():
     i=1
@@ -29,37 +37,46 @@ def my_id_generator():
 gen = my_id_generator()
 
 
+# home page route
+@app.route("/", methods=['GET'])
+def home():
+    return render_template("index.html")
+
+
 
 # health check of both the flask and the database
 @app.route("/health", methods=["GET"])
 def isHealthy():
     status=DB.getHealthCheck()
     if status == 1:
-        return jsonify("OK"),200
+        return statement_return("OK", "server is up and run", 200)
     else:
-        return jsonify(status="Database Failure"),500
+        return statement_return("ERROR", "Database Failure", 500)
 
 
 
 # create new provider in the database
 @app.route("/provider", methods=['POST'])
 def CreateProvider():
-    name = request.args.get('name')
-    if name == None:
-        name='Provider'+str(next(gen))
+    name = request.form['name']
+    if name == "":
+        return statement_return("ERROR", "Name is missing", 500)
     DB.addProvider(name)
-    return jsonify(id=DB.GetProviderByName(name))
+    return statement_return("ID", DB.GetProviderByName(name), 200)
 
 
 
 # to change name of existing provider by the drovider's id    
-@app.route("/provider/<id>",methods=['PUT'])
-def ChangeName(id):
+@app.route("/provider",methods=['GET'])
+def ChangeName():
     new_name = request.args.get('name')
-    if new_name == None:
-        new_name='Provider'+str(next(gen))
+    id = request.args.get('id')
+    if new_name == "":
+        return statement_return("ERROR", "Name is missing", 500)
+    elif id == "":
+        return statement_return("ERROR", "ID is missing", 500)
     DB.changeProviderName(id,new_name)
-    return jsonify(success="provider name has changed")
+    return statement_return("Success", "Provider name has changed", 200)
 
 
 
@@ -68,9 +85,10 @@ def ChangeName(id):
 @app.route('/rates', methods=['GET'])
 def downloadFile():
 #   file_name = request.args.get('file_name')
-  file_path = '/in/rates.xlsx'
-  shutil.copy(file_path, f'./rates_backups/ratesBU_{str(next(gen))}.xlsx')
-  return jsonify(success='File downloaded successfully')
+    file_path = '/in/rates.xlsx'
+    shutil.copy(file_path, f'./rates_backups/ratesBU_{str(next(gen))}.xlsx')
+    
+    return statement_return("Success", "File downloaded successfully", 200)
 
 
 
@@ -79,37 +97,45 @@ def downloadFile():
 def updateFile():
     DB.cleanRatesTable()
     DB.createRatesFromFile()
-    return jsonify(success="Rates table is up to date")
+    return statement_return("Success", "Rates table is up to date", 200)
 
 
 
 # method to create a new truck
 @app.route("/truck", methods=["POST"])
 def addTruck():    
-    id = request.args.get('id')
-    plate = request.args.get('plate')
+    id = request.form["id"]
+    plate = request.form["plate"]
         
-    if id==None:
-        return jsonify(error="id is missing"),500
-    if plate==None:
-        return jsonify(error="plate is missing"),500
-    
-    return jsonify(DB.addTruck(int(id),str(plate)))
+    if id=="":
+        return statement_return("ERROR", "ID is missing", 500)
+    elif plate=="":
+        return statement_return("ERROR", "Plate is missing", 500)
+    else:
+        ans = DB.addTruck(int(id),str(plate))
+        return statement_return("New Truck", ans, 200)
 
 
-# change truck's plate 
-@app.route("/truck/<id>", methods=["PUT"])
-def changIDtruck(id):
+
+# change truck's provider 
+@app.route("/truckpro", methods=["GET"])
+def changIDtruck():
     plate = request.args.get('plate')
-    if plate==None:
-        return jsonify(error="plate is missing"),500
+    id = request.args.get('id')
+    if id=="":
+        return statement_return("ERROR", "ID is missing", 500)
+    elif plate=="":
+        return statement_return("ERROR", "Plate is missing", 500)
+    
     Truck=DB.ChangeTruckID(plate,id)
-    return jsonify(success=Truck)
+    return statement_return("Success", Truck, 200)
 
 
-@app.route("/truck/<id>", methods=["GET"])
-def Gettruck(id):
-    From = request.args.get('from')
+
+@app.route("/truck", methods=["GET"])
+def Gettruck():
+    id = request.args.get('plate')
+    From = request.args.get('From')
     to= request.args.get('to')
     if DB.CheckForTruckID(id)==None:
         return jsonify("Truck not found"),404 
@@ -124,16 +150,15 @@ def Gettruck(id):
             'tara':tara,
             'session':session
         }
-    return jsonify(result)
+    answer = jsonify(result)
+    answer = answer.get_data().decode('utf-8')
+    return make_response(render_template("base.html", answer=answer),200)
 
+   
 
-
-
-
-    
-
-@app.route("/bill/<id>", methods=["GET"])
-def getBill(id):
+@app.route("/bill", methods=["GET"])
+def getBill():
+    id = request.args.get("id")
     name  = DB.GetProviderByID(id)
     start = request.args.get('from')
     end = request.args.get('to')
@@ -197,6 +222,7 @@ def getBill(id):
 def my_try():
     return  render_template("test.json")  
     
-    
+
+
 if __name__=="__main__":
     app.run(host="0.0.0.0",debug=True)
