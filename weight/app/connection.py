@@ -26,6 +26,38 @@ def get_connection():
 #                 connection.close()
 #         else:
 #             mycur.execute("use weight")
+def execute(query):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(str(query))
+    cur.close()
+    conn.close()
+
+def execute_commit(query):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(str(query))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def fetchall(query):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(str(query))
+    res = cur.fetchall()
+    cur.close()
+    conn.close()
+    return res
+
+def fetchone(query):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(str(query))
+    res = cur.fetchone()
+    cur.close()
+    conn.close()
+    return res
 
 def db_health_check():
     try:

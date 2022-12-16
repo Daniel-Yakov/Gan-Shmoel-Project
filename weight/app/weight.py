@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 import connection
 import requests
 from datetime import datetime,date
-
+import csv,json,os
 app_w = Flask(__name__)
 test_url = "https://www.google.com"
 
@@ -149,7 +149,7 @@ def transaction_post():
             cur.close()
             conn.close()
             return jsonify({"id": resID, "truck": truck, "bruto": weight})
-        elif direction == "out":
+        elif direction == "out": ########OUT הוא בעייתי בגלל הוא מקבל אחרי אין רק עם יש פורס
             truckTaraVal = weight  # Weight of truck
             query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in' <(SELECT MAX(id) AS max_id FROM transactions)"
             cur.execute(query)
@@ -193,7 +193,7 @@ def transaction_post():
     # return
     if direction == "in" and isIn(truck, direction):
         # outquery = "SELECT direction FROM transactions WHERE truck is %s", (
-        #     truck)
+        #     truck)################# אין לא עובד עם אחרי אוט
         conn = connection.get_connection()
         cur = conn.cursor()
         # cur.execute(outquery)
@@ -216,7 +216,7 @@ def transaction_post():
     # and isIn(truck,direction)==False############################:
     elif direction == "out" and isIn(truck, direction) == False:  # Force
         conn = connection.get_connection()
-        cur = conn.cursor()
+        cur = conn.cursor()######################בעיה עם אוט לא נכנס אלא עם זה פורס
         query = f"SELECT MAX(id) AS max_id FROM transactions where truck='{truck}'"
         cur.execute(query)
         resID = cur.fetchone()[0]
@@ -228,7 +228,7 @@ def transaction_post():
         # <(SELECT MAX(id) AS max_id FROM transactions)"
         query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in'"
         cur.execute(query)
-        total_weight = cur.fetchone()[0]
+        total_weight = cur.fetchone()[0]####################TypeError: 'NoneType' object is not subscriptable
         conn.close()
         cur.close()
         netoVal = int(total_weight-total_weight_containers - truckTaraVal)
@@ -257,7 +257,88 @@ def transaction_post():
 # POST /batch-weight (called by admin)
 @app_w.post('/batch-weight')
 def batchWeight_post():
-    pass
+    filename = request.form.get("filename")
+    passw = request.form.get("password")
+    fext = os.path.splitext(filename)[1]
+    if passw != 'root':
+        return "\nWrong Password\n"
+    # file.save(f'./in/{file.filename}')
+    F="./in/"+filename
+    try:
+        FirstCsv=True
+        with open(F,'r') as file:
+            if fext == '.csv':
+                csvreader = csv.reader(file)
+                for row in csvreader:
+                    valist = []
+                    if FirstCsv:
+                        FirstCsv=False
+                        unit=row[1]#kg/lbs
+                    else:
+                        valist.append(row)
+                    
+            elif fext == '.json':
+                data=json.load(file)
+                valist = []
+                for item in data:
+                    valist.append((item['id'], item['weight'], item['unit']))
+                unit = valist[0][2]
+                print(valist)
+                print(unit)
+            else:
+                return "ERRO1"
+    except:
+        return "ERRO2"
+    if FirstCsv ==False: 
+        for inserting in valist:
+            pass
+    allContainer=connection.fetchall('SELECT container_id FROM containers_registered')
+    # return jsonify(allContainer)
+    listofUpdate=[]
+    for con_id in allContainer:
+        if con_id[0] in valist:
+            listofUpdate.append[con_id[0]]
+   
+    for inserting[0] in valist:###CSV ['K-8263', '666']  ##JSON ('T-14409', 528, 'lbs')
+        
+        if inserting[0] in listofUpdate:####################### כמעט מוכן 
+            connection.execute_commit(f"UPDATE containers_registered SET weight = '{inserting[1]}', unit = '{unit}' WHERE container_id = '{inserting[0]}'")
+        else:
+            connection.execute_commit(f"INSERT INTO containers_registered (container_id,weight,unit) VALUES ('{inserting[0]}','{inserting[1]}','{unit}')")        
+
+    return filename+" uploaded successfully"
+       
+        
+    
+
+
+
+
+    # conn = connection.get_connection()
+    # cur = conn.cursor()
+    # allCID = cur.execute('SELECT container_id FROM containers_registered')
+    # cur.execute('SELECT container_id FROM containers_registered')
+    # res=cur.fetchall()#why we not use in res
+    # cur.close()
+    # conn.close()
+    #print(allCID)   #fo tstin
+    # allCID = [i[0] for i in allCID]#what is allCID
+    # for i in valist:
+    #     if i[0] in allCID :
+    #         conn = connection.get_connection()
+    #         cur = conn.cursor()
+    #         cur.execute(f"UPDATE containers_registered SET weight = {int(i[1])}, unit = '{unit}' WHERE container_id = '{i[0]}'")
+    #         res=cur.fetchall()#########################
+    #         cur.close()
+    #         conn.close()
+    #     else:
+    #         conn = connection.get_connection()
+    #         cur = conn.cursor()
+    #         cur.execute(f"INSERT INTO containers_registered (container_id,weight,unit) VALUES ('{i[0]}',{int(i[1])}, '{unit}')")
+    #         res=cur.fetchall()#################################
+    #         cur.close()
+    #         conn.close()
+    # return valist
 
 
 # GET /unknown (called by admin)
@@ -283,7 +364,7 @@ def transaction_get():
     
     filter = request.args.get('filter')
     
-    if filter is not "in" or filter is not "out" or filter is not "none":#######################################
+    if filter is None:#######################################מחכה לבדיקה לאחר שהפוסט היה מוכן
         data=[]
         conn = connection.get_connection()
         # get weight data
@@ -292,6 +373,7 @@ def transaction_get():
         rows = cur.fetchall()
         cur.close()
         conn.close()
+        
         for row in rows:
             data.append({
             'truck': row[0],
@@ -322,17 +404,17 @@ def transaction_get():
             'bruto': row[2],
             'neto': row[3],
             'produce': row[4],
-            'containers': str(row[5]).split(',')}) #לעשות משהו אחר אם קורה שאין IN
+            'containers': str(row[5]).split(',')}) 
 
 #    cur.close()
 #   conn.close()
-    return "2"#jsonify(data)
+    return jsonify(data)
+
 
 
 
 # GET /item/<id> (truck/container report)
-# GET /item/<id> (truck/container report)
-@app_w.get('/item/<id>')
+@app_w.get('/item/<id>')#####################בדיקה לאחר פוסט
 def item_id(id):
     # assume the server time is the current time
     server_time = datetime.now()
@@ -398,14 +480,21 @@ def item_id(id):
     return jsonify(data)
 ################################################################################
 
+@app_w.get('/session1/<id>')
+def session_id1(id):
+    my_id=id
+    query=(f"SELECT direction FROM transactions WHERE id ='{my_id}'")
+    res=connection.fetchall(query)
+    return jsonify(res)
+############################################################################################3
 # GET /session/<id> (weighing report)
-@app_w.get('/session/<id>')
+@app_w.get('/session/<id>')#עושה הרבה בעיות 
 def session_id(id):
     my_id_truck=id
     conn = connection.get_connection()
     cur = conn.cursor()
     cur.execute("SELECT direction FROM transactions WHERE id =%s",my_id_truck)
-    res=cur.fetchone()[0]
+    res=cur.fetchone()
     if res=="out":
         isout=True
     else:
@@ -419,6 +508,7 @@ def session_id(id):
         row = cur.fetchone()
         cur.close()
         conn.close()
+        # return jsonify(row)###############################בעיה של NULL לטפל
         id1, truck1, bruto1= row[0], row[1], row[2]
         # if isinstance(truck1, int):
         #     Tara=int(my_bruto)
