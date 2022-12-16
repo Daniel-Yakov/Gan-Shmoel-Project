@@ -3,7 +3,7 @@ from database import *
 import shutil
 import requests
 import os
-
+import time
 #create flask
 app = Flask(__name__)
 
@@ -13,7 +13,12 @@ weight_port = int(os.environ['WEIGHT_APP_PORT'])
 app.config["JSON_SORT_KEYS"] = False
 
 # create database connection with 'database' class
-DB=DataBase("billdb", "root")
+try:
+    DB=DataBase("billdb", "root")
+except:
+    time.sleep(5)
+    DB=DataBase("billdb", "root")
+
 
 
 def my_id_generator():
