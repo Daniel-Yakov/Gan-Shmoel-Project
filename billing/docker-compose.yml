@@ -16,6 +16,7 @@ services:
       interval: 3s
       timeout: 7s
       retries: 15
+      start_period: 30s
   
   pythonapp:
     build: ./pythonapp/
