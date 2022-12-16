@@ -119,17 +119,19 @@ def transaction_post():
 
     total_weight_containers = 0
     # Iterate through the list of containers_id
-    conn = connection.get_connection()
-    cur = conn.cursor()
+    # conn = connection.get_connection()
+    # cur = conn.cursor()
     listContainers = str(containers).split(",")
     for container_id in listContainers:
-        cur.execute(
-            "SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
-        result = cur.fetchone()
+
+        # cur.execute(
+        #     "SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
+        query=f"SELECT weight FROM containers_registered WHERE container_id = {container_id}"
+        result = connection.fetchone(query)
         if result != None:
             total_weight_containers += result[0]
-    cur.close()
-    conn.close()
+    # cur.close()
+    # conn.close()
 
     if check_direction(direction, truck, force) == False:  # מחזירה שקר אם יש בעיה בכיוונים
         return "Error"
@@ -156,7 +158,7 @@ def transaction_post():
             cur = conn.cursor()
             truckTaraVal = weight  # Weight of truck
             # <(SELECT MAX(id) AS max_id FROM transactions)"
-            query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in'"
+            query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='{direction}'"
             cur.execute(query)
             total_weight = cur.fetchone()
             conn.close()
@@ -286,7 +288,7 @@ def transaction_post():
 def batchWeight_post():
     filename = request.form.get("filename")
     passw = request.form.get("password")
-    fext = os.path.splitext(filename)[1]
+    fext = os.path.splitext(filename)[1]#.csv#.json#
     if passw != 'root':
         return "\nWrong Password\n"
     # file.save(f'./in/{file.filename}')
@@ -296,8 +298,8 @@ def batchWeight_post():
         with open(F,'r') as file:
             if fext == '.csv':
                 csvreader = csv.reader(file)
+                valist = []
                 for row in csvreader:
-                    valist = []
                     if FirstCsv:
                         FirstCsv=False
                         unit=row[1]#kg/lbs
@@ -310,28 +312,33 @@ def batchWeight_post():
                 for item in data:
                     valist.append((item['id'], item['weight'], item['unit']))
                 unit = valist[0][2]
-                print(valist)
-                print(unit)
             else:
                 return "ERRO1"
     except:
         return "ERRO2"
-    if FirstCsv ==False: 
-        for inserting in valist:
-            pass
-    allContainer=connection.fetchall('SELECT container_id FROM containers_registered')
+    
+    allContainer=connection.fetchall('SELECT container_id FROM containers_registered')#############
     # return jsonify(allContainer)
     listofUpdate=[]
-    for con_id in allContainer:
-        if con_id[0] in valist:
-            listofUpdate.append[con_id[0]]
+    flatList=[]
+    for item in valist:########################
+        flatList.extend(item)
+    # return jsonify(allContainer)
+    # for con_id in allContainer:
+    #if array2 in array1:
+        if flatList in allContainer[0]:###########לא עובד
+            listofUpdate.append[flatList]
+            return listofUpdate
    
-    for inserting[0] in valist:###CSV ['K-8263', '666']  ##JSON ('T-14409', 528, 'lbs')
+    for inserting in valist:###CSV ['K-8263', '666']  ##JSON ('T-14409', 528, 'lbs')
         
-        if inserting[0] in listofUpdate:####################### כמעט מוכן 
+        if inserting[0] in listofUpdate :####################### תיקון לא עובד...משתמש בטריי אבל האיפים לא עובדים למעלה
             connection.execute_commit(f"UPDATE containers_registered SET weight = '{inserting[1]}', unit = '{unit}' WHERE container_id = '{inserting[0]}'")
         else:
-            connection.execute_commit(f"INSERT INTO containers_registered (container_id,weight,unit) VALUES ('{inserting[0]}','{inserting[1]}','{unit}')")        
+            try:
+                connection.execute_commit(f"INSERT INTO containers_registered (container_id,weight,unit) VALUES ('{inserting[0]}','{inserting[1]}','{unit}')")        
+            except:
+                connection.execute_commit(f"UPDATE containers_registered SET weight = '{inserting[1]}', unit = '{unit}' WHERE container_id = '{inserting[0]}'")
 
     return filename+" uploaded successfully"
        
@@ -457,14 +464,59 @@ def item_id(id):
     t2 = datetime.strptime(t2, '%Y%m%d%H%M%S')
     conn = connection.get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id FROM transactions WHERE truck= %s and datetime BETWEEN %s AND %s and direction= 'out'", (item_id,t1, t2))
+    cur.execute(f"SELECT id FROM transactions WHERE truck= '{item_id}' and datetime BETWEEN '{t1}' AND '{t2}' ")
     ListofTuple= cur.fetchall()#######################
-    if len(ListofTuple)==0:
-            return jsonify("Not Found " + item_id)
-    else:
-        myID=ListofTuple[0]
-        cur.close()
-        conn.close()
+    cur.close()
+    conn.close()
+    
+    if ListofTuple is not None:
+        listRes=[]
+        myID=[]
+        for list_id in ListofTuple:
+            myID.append(list_id[0])
+        #direction='out'
+        listOfIDs=[]
+        for res_id in myID:
+            conn = connection.get_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM transactions WHERE id=%s and direction='out'" ,res_id)
+            resultOut = cur.fetchone()
+            if resultOut is not None:
+                listOfIDs.append(resultOut)
+            cur.close()
+            conn.close()
+            
+        
+        for i in listOfIDs:
+            my_res={"id":i[0],"datetime":i[1],"direction":i[2],"truck":i[3],"containers":i[4],"bruto":i[5],"truckTara":i[6],"neto":i[7],"produce":i[8]}
+            listRes.append(my_res)
+        
+        ##direction='in'"
+        listOfIDs=[]
+        for res_id in myID:
+            conn = connection.get_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM transactions WHERE id=%s and direction='in'" ,res_id)
+            resultOut = cur.fetchone()
+            if resultOut is not None:
+                listOfIDs.append(resultOut)
+            cur.close()
+            conn.close()
+          
+        for i in listOfIDs:
+            my_res={"id":i[0],"direction":i[2],"truck":i[3],"bruto":i[5]}
+            listRes.append(my_res)
+        
+        
+        
+        return jsonify(listRes)
+
+
+
+
+
+
+
         # if len(ListofTuple)==0:
         conn = connection.get_connection()
         cur = conn.cursor()
@@ -507,90 +559,145 @@ def item_id(id):
     return jsonify(data)
 ################################################################################
 
-@app_w.get('/session1/<id>')
-def session_id1(id):
-    my_id=id
-    query=(f"SELECT direction FROM transactions WHERE id ='{my_id}'")
-    res=connection.fetchall(query)
-    return jsonify(res)
+
 ############################################################################################3
 # GET /session/<id> (weighing report)
-@app_w.get('/session/<id>')#עושה הרבה בעיות 
+@app_w.get('/session/<id>')
 def session_id(id):
-    my_id_truck=id
+
     conn = connection.get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT direction FROM transactions WHERE id =%s",my_id_truck)
-    res=cur.fetchone()
-    if res=="out":
-        isout=True
-    else:
-        isout=False
+    cur.execute(f"SELECT id FROM transactions WHERE id='{id}' ")
+    ListofTuple= cur.fetchall()#######################
     cur.close()
     conn.close()
-    if isout == False:
-        conn = connection.get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT id,truck,bruto from transactions where id =%s",my_id_truck)
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        # return jsonify(row)###############################בעיה של NULL לטפל
-        id1, truck1, bruto1= row[0], row[1], row[2]
-        # if isinstance(truck1, int):
-        #     Tara=int(my_bruto)
-        # else:
-        #     Tara="na"
-        # End of part 1
-        return{ "id": id1,
-        "truck": truck1 or "na",
-        "bruto": bruto1,
-        }
+    
+    if ListofTuple is None:
+            return "ERRO"
     else:
-        conn = connection.get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT id,truck,bruto,truckTara,neto from transactions where id =%s",my_id_truck)
-        row = cur.fetchone()
-        id1, truck1, bruto1,truckTara,neto1= row[0], row[1], row[2], row[3], row[4]
-        cur.close()
-        conn.close()
-        conn = connection.get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT containers from transactions where id =%s",my_id_truck)
-        my_containers=cur.fetchone()
-        my_containers=str(my_containers).split(" ")
-        cur.close()
-        conn.close()
-        # Iterate through the list of containers_id
-        total_weight_containers = 0
-        for container_id in my_containers:
+        listRes=[]
+        myID=[]
+        for list_id in ListofTuple:
+            myID.append(list_id[0])
+        #direction='out'
+        listOfIDs=[]
+        for res_id in myID:
             conn = connection.get_connection()
             cur = conn.cursor()
-            # Execute the SQL query
-            cur.execute("SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
-            # Fetch the result
-            result = cur.fetchone()
+            cur.execute("SELECT * FROM transactions WHERE id=%s and direction='out'" ,res_id)
+            resultOut = cur.fetchone()
+            if resultOut is not None:
+                listOfIDs.append(resultOut)
             cur.close()
             conn.close()
-            # If the container_id is found in the table, add its weight to the total
-            if result is not None:
-                total_weight_containers += result[container_id]
-            # Checks if there is a container that has no weight
-            else:
-                flag=True
-        # Final calculation rely on the flag
-        if flag:
-            Neto="na"
+            
+        
+        for i in listOfIDs:
+            my_res={"id":i[0],"direction":i[2],"truck":i[3],"bruto":i[5],"truckTara":i[6],"neto":i[7]}
+            listRes.append(my_res)
+        
+        ##direction='in'"
+        listOfIDs=[]
+        for res_id in myID:
+            conn = connection.get_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM transactions WHERE id=%s and direction='in'" ,res_id)
+            resultOut = cur.fetchone()
+            if resultOut is not None:
+                listOfIDs.append(resultOut)
+            cur.close()
+            conn.close()
+          
+        for i in listOfIDs:
+            my_res={"id":i[0],"direction":i[2],"truck":i[3],"bruto":i[5]}
+            listRes.append(my_res)
+        
+        if len(listRes) == 0:
+            return "Session "+id+" Does not exist"
         else:
-            Neto=total_weight_containers-bruto1- (int(weight)-total_weight_containers)
-        # End of part 2
-        return{ "id": id1,
-        "truck": truck1 or "na",
-        "bruto": bruto1,
-        "truckTara": int(weight)-total_weight_containers,
-        "neto": Neto
-          }
+            return jsonify(listRes)
 
+
+
+
+    # ################################################################################################
+    # my_id_truck=id
+    # conn = connection.get_connection()
+    # cur = conn.cursor()
+    # cur.execute("SELECT direction FROM transactions WHERE truck =%s and direction='out' or direction='in'",my_id_truck)
+    # res=cur.fetchall()
+    
+    # # if res is None:
+    # #     return "error"
+    # # else:
+    # #     return "good"
+    # # if res=="out":
+    # #     isout=True
+    # # else:
+    # #     isout=False
+    # # cur.close()
+    # # conn.close()
+    # if isout == False:
+    #     conn = connection.get_connection()
+    #     cur = conn.cursor()
+    #     cur.execute("SELECT id,truck,bruto from transactions where truck =%s",my_id_truck)
+    #     row = cur.fetchone()
+    #     cur.close()
+    #     conn.close()
+    #     id1, truck1, bruto1= row[0], row[1], row[2]
+    #     # if isinstance(truck1, int):
+    #     #     Tara=int(my_bruto)
+    #     # else:
+    #     #     Tara="na"
+    #     # End of part 1
+    #     return{ "id": id1,
+    #     "truck": truck1 ,
+    #     "bruto": bruto1,
+    #     }
+    # else:
+    #     conn = connection.get_connection()
+    #     cur = conn.cursor()
+    #     cur.execute("SELECT id,truck,bruto,truckTara,neto from transactions where truck =%s",my_id_truck)
+    #     row = cur.fetchone()
+    #     id1, truck1, bruto1,truckTara,neto1= row[0], row[1], row[2], row[3], row[4]
+    #     cur.close()
+    #     conn.close()
+    #     conn = connection.get_connection()
+    #     cur = conn.cursor()
+    #     cur.execute("SELECT containers from transactions where id =%s",my_id_truck)
+    #     my_containers=cur.fetchall()
+    #     my_containers=str(my_containers).split(" ")
+    #     cur.close()
+    #     conn.close()
+    #     # Iterate through the list of containers_id
+    #     total_weight_containers = 0
+    #     for container_id in my_containers:
+    #         conn = connection.get_connection()
+    #         cur = conn.cursor()
+    #         # Execute the SQL query
+    #         cur.execute("SELECT weight FROM containers_registered WHERE container_id = %s", (container_id))
+    #         # Fetch the result
+    #         result = cur.fetchone()
+    #         cur.close()
+    #         conn.close()
+    #         # If the container_id is found in the table, add its weight to the total
+    #         if result is not None:
+    #             total_weight_containers += result[container_id]
+    #         # Checks if there is a container that has no weight
+    #         else:
+    #             flag=True
+    #     # Final calculation rely on the flag
+    #     if flag:
+    #         Neto="na"
+    #     else:
+    #         Neto=total_weight_containers-bruto1- (int(10)-total_weight_containers)
+    #     # End of part 2
+    #     return{ "id": id1,
+    #     "truck": truck1 or "na",
+    #     "bruto": bruto1,
+    #     "truckTara": int(10)-total_weight_containers,
+    #     "neto": Neto
+    #       }
 
 #GET /health
 @app_w.get('/health')
