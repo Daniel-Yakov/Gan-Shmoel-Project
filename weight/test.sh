@@ -8,7 +8,7 @@ if [ "$output" = '"APP ON AIR"' ]; then
     echo "Passed the health assesment"
     
 
-elif [ "$output" = '"OK 200 & BAD Connection"' ]
+elif [ "$output" = '"OK 200 & BAD Connection"' ];then
 		echo "failed health to database assesment"
         
 else
