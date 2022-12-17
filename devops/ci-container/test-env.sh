@@ -23,8 +23,6 @@ docker-compose -f ./weight/docker-compose-w-test.yml -p test up -d
 docker-compose -f ./billing/docker-compose-b-test.yml build --no-cache
 docker-compose -f ./billing/docker-compose-b-test.yml -p test up -d
 
-rm -f ./weight/docker-compose-w-test.yml ./billing/docker-compose-b-test.yml
-
 # run tests
 ./weight/test.sh > report.txt
 let weight_test=$?
