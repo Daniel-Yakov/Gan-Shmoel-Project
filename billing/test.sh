@@ -4,7 +4,7 @@ SCORE=0
 sleep 1
 echo "STARTING HEALTH TEST"
 sleep 1
-output=$(curl "http://localhost:$BILLING_APP_PORT/health")
+output=$(curl "http://ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:$BILLING_APP_PORT/health")
 
 echo $output | grep -q -o "OK" 
 
@@ -26,7 +26,7 @@ sleep 1
 
 search_string="Welcome"
 form_data="Pname=value"
-output=$(curl -X POST "http://localhost:$BILLING_APP_PORT/provider" -F Pname=test)
+output=$(curl -X POST "http://ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:$BILLING_APP_PORT/provider" -F Pname=test)
 echo $output | grep -q -o "ID"
 
 
@@ -45,7 +45,7 @@ fi
 
 echo "Starting Volume Check"
 sleep 1
-output=$(curl -X GET "http://localhost:$BILLING_APP_PORT/rates" -H "Content-Type: application/json")
+output=$(curl -X GET "http://ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:$BILLING_APP_PORT/rates" -H "Content-Type: application/json")
 echo $output | grep -q -o "File downloaded successfully" 
 
 if [ $? -eq 0  ]; then
