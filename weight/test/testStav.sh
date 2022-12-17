@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 success=0
 
 WEIGHT_IP=localhost
