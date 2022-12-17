@@ -139,8 +139,10 @@ def Gettruck():
     to= request.args.get('to')
     if DB.CheckForTruckID(id)==None:
         return statement_return("ERROR", "Truck not found", 404)
-
-    truckID=int(DB.CheckForTruckID(id)[0][0])
+    try:
+        truckID=int(DB.CheckForTruckID(id)[0][0])
+    except:
+        return 'truck not found'
     #WEIGH= requests.get(f"http://localhost:{WEIGHT_APP_PORT}/item?from={From}&to={to}").json()
     WEIGH=[ { "id": "T-3", "session": [ { "bruto": 200, "containers": "None", "datetime": "Thu, 15 Dec 2022 11:17:30 GMT", "direction": "out", "id": 10027, "neto": 0, "produce": "apple", "truck": "T-3", "truckTara": 200 }, { "bruto": 200, "containers": "None", "datetime": "Thu, 15 Dec 2022 11:17:53 GMT", "direction": "out", "id": 10028, "neto": 0, "produce": "apple", "truck": "T-3", "truckTara": 200 } ], "tara": "na" } ]
     id=WEIGH[0]['id']
