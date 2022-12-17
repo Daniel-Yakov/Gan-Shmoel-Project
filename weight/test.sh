@@ -326,7 +326,7 @@ else
     echo "Failed Test #1 - Failed to load the MySQL database using json file"
     exit 1
 fi
-test2=$(curl --location --request POST 'localhost:8083/batch-weight' \
+test2=$(curl "ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:${WEIGHT_APP_PORT}/batch-weight" \
 --form 'filename="containers2.csv"' \
 --form 'password="root"')
 expected_result2="containers2.csv uploaded successfully"
@@ -338,7 +338,7 @@ else
     echo "Failed Test #2 - Failed to load the MySQL database using csv file"
 fi
 
-test3=$(curl --location --request POST 'localhost:8083/batch-weight' \
+test3=$(curl "ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:${WEIGHT_APP_PORT}/batch-weight" \
 --form 'filename="containers2.csv"' \
 --form 'password="wrongpass"')
 expected_result3="Wrong Password"
@@ -350,7 +350,7 @@ else
     echo "Failed Test #3 - Either load a MySQL database using a wrong password or failed to report it in the desired format."
 fi
 
-test4=$(curl --location --request POST 'localhost:8083/batch-weight' \
+test4=$(curl "ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:${WEIGHT_APP_PORT}/batch-weight" \
 --form 'filename="file.txt"' \
 --form 'password="root"')
 expected_result4="can't open this file"
