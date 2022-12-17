@@ -24,8 +24,11 @@ docker-compose -f ./billing/docker-compose-b-test.yml build --no-cache
 docker-compose -f ./billing/docker-compose-b-test.yml -p test up -d
 
 # run tests
+./weight/test.sh >> report.txt
+let weight_test=$?
+
 ./billing/test.sh > report.txt
 let billing_test=$?
 
-exit $billing_test
+exit $(($billing_test + $weight_test))
 
