@@ -287,7 +287,10 @@ def transaction_post():
 def batchWeight_post():
     filename = request.form.get("filename")
     passw = request.form.get("password")
-    fext = os.path.splitext(filename)[1]#.csv#.json#
+    try:
+        fext = os.path.splitext(filename)[1]#.csv#.json#
+    except:
+        return "Invalid name "+filename
     if passw != 'root':
         return "Wrong Password"
     F="./in/"+filename
