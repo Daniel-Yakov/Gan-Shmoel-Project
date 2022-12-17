@@ -27,6 +27,8 @@ docker-compose -f ./billing/docker-compose-b-test.yml -p test up -d
 ./weight/test.sh > report.txt
 let weight_test=$?
 
+echo "\n" >> report.txt
+
 ./billing/test.sh >> report.txt
 let billing_test=$?
 
