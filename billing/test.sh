@@ -29,7 +29,6 @@ form_data="Pname=value"
 output=$(curl -X POST "http://ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:$BILLING_APP_PORT/provider" -F Pname=test)
 echo $output | grep -q -o "ID"
 
-
 if [ $? -eq 0  ]; then
     tput setaf 2
     echo "Data base test finished successfully"
@@ -39,6 +38,8 @@ else
     tput setaf 1
     echo "failed database  assesment"
     tput sgr0
+    SCORE=$((SCORE+1))
+
 fi
 
 
