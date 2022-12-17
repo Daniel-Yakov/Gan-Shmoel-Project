@@ -41,7 +41,7 @@ post_success=0
 echo "STARTING POST WEIGHT TEST"
 sleep 1
 truncate(){
-	docker exec -it weight-my_data-1 mysql -u root -proot weight -e "TRUNCATE TABLE transactions"
+	docker exec -it test-my_data-1  mysql -u root -proot weight -e "TRUNCATE TABLE transactions"
  }
 truncate >> /dev/null
 test1=$(curl "ubuntu@ec2-3-10-71-229.eu-west-2.compute.amazonaws.com:${WEIGHT_APP_PORT}/weight" \
@@ -215,13 +215,13 @@ echo "STARTING GET UNKNOWN TEST as weight team"
 sleep 3
 #PREP
 test_prep(){
-    docker exec -it weight-my_data-1 mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id, unit) VALUES ("K-Test1", "lbs")'
-    docker exec -it weight-my_data-1 mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id, unit) VALUES ("K-Test2", "kg")'
-    docker exec -it weight-my_data-1 mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id) VALUES ("K-Test3")'
-    docker exec -it weight-my_data-1 mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id) VALUES ("K-Test4")'
-    docker exec -it weight-my_data-1 mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id) VALUES ("K-Test5")'
-    docker exec -it weight-my_data-1 mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id, unit) VALUES ("K-Test6", "lbs")'
-    docker exec -it weight-my_data-1 mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id, unit) VALUES ("K-Test7", "lbs")'
+    docker exec -it test-my_data-1  mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id, unit) VALUES ("K-Test1", "lbs")'
+    docker exec -it test-my_data-1  mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id, unit) VALUES ("K-Test2", "kg")'
+    docker exec -it test-my_data-1  mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id) VALUES ("K-Test3")'
+    docker exec -it test-my_data-1  mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id) VALUES ("K-Test4")'
+    docker exec -it test-my_data-1  mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id) VALUES ("K-Test5")'
+    docker exec -it test-my_data-1  mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id, unit) VALUES ("K-Test6", "lbs")'
+    docker exec -it test-my_data-1  mysql -u root -proot weight -e 'INSERT INTO containers_registered (container_id, unit) VALUES ("K-Test7", "lbs")'
 }
 test_prep >> /dev/null # Inserts few containers with no weight information
 # Test 1 
