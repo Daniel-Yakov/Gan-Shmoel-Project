@@ -33,11 +33,10 @@ def check_direction(direction, truck, force):
     direction = str(direction)
     if lastID == lastInID and lastID is not None:
         res = "in"
-    elif lastID is None or lastInID is None:  # מחזיר שקר כדי שיעשה שני דברים
+    elif lastID is None or lastInID is None:
         return True
     else:
         res = "out"
-
     if direction == "in" and res == "in":
         if force:
             return True
@@ -74,7 +73,7 @@ def isIn(truck, direction):
     cur.close()
     conn.close()
     direction = str(direction)
-    if lastID == lastInID:  # 3and lastID is not None:
+    if lastID == lastInID and lastID is not None:  # 3and lastID is not None:
         return True
     else:
         return False
@@ -84,6 +83,7 @@ def isIn(truck, direction):
 
 @app_w.post('/weight')
 def transaction_post():
+
     # get data from request
     req_data = request.get_json()
     direction = req_data.get('direction')
@@ -94,19 +94,19 @@ def transaction_post():
     force = req_data.get('force')
     produce = req_data.get('produce')
     timestamp = datetime.now().strftime(r"%Y%m%d%H%M%S")
-    # BAG לבדוק מה קורה שלא שולחים כלום
+    
     # check if all the required fields are present
     if direction not in ["in", "out", "none"]:
-        return "Direction should be in/out/none!", 400
+        return "Direction should be in/out/none!"
 
     if unit not in ["lbs", "kg"]:
-        return "Unit should be lbs/kg!", 400
+        return "Unit should be lbs/kg!"
 
     if weight is None:
-        return "Missing weight parameter!", 400
+        return "Missing weight parameter!"
 
     if containers is None:
-        return "Missing containers parameter!", 400
+        return "Missing containers parameter!"
 
     if force is None:
         force = False
@@ -117,8 +117,8 @@ def transaction_post():
     if truck is None:
         truck = "na"
 
-    total_weight_containers = 0
     # Iterate through the list of containers_id
+    total_weight_containers = 0
     listContainers = str(containers).split(",")
     for container_id in listContainers:
         conn = connection.get_connection()
@@ -128,19 +128,20 @@ def transaction_post():
         result = cur.fetchone()
         cur.close()
         conn.close()
-        notForCalc=False
+        notForCalc = False######You need to create a variable that is one that enters the truth, it was not possible to calculate
         if result != None:
-            try:#if no weight or weight =NULL
-                temp=1
-                temp+=result[0]
+            try:
+                temp = 1
+                temp += result[0]
             except:
-                notForCalc=True
-
+                notForCalc = True
             if result[1] == "lbs":
-                result = float(result[0]) // 2.2046226218
-            if not notForCalc :
-                total_weight_containers += result
-    if check_direction(direction, truck, force) == False:  # מחזירה שקר אם יש בעיה בכיוונים
+                result = float(result[0]) / 2.2046226218
+                if not notForCalc:
+                    total_weight_containers += result
+            elif not notForCalc:
+                total_weight_containers += result[0]
+    if check_direction(direction, truck, force) == False:  # Returns false if there is a problem with the directions
         return "Error"
     elif force:
         # Overwrite the existing row with a new POST request
@@ -174,10 +175,10 @@ def transaction_post():
                 return "You're trying to force an update on a transaction with no weight documented"
             total_weight = total_weight[0]
             if notForCalc:
-                netoVal="na"
+                netoVal = "na"
             else:
                 netoVal = total_weight - total_weight_containers - truckTaraVal
-                netoVal=round(netoVal, 2)
+                netoVal = round(netoVal, 2)
             conn = connection.get_connection()
             cur = conn.cursor()
             query = f"UPDATE transactions SET datetime='{timestamp}', direction='{direction}', containers='{containers}',truckTara='{truckTaraVal}', neto='{netoVal}', produce='{produce}' WHERE id='{resID}' and truck='{truck}'"
@@ -185,39 +186,15 @@ def transaction_post():
             conn.commit()
             cur.close()
             conn.close()
-            return jsonify({"id": resID, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto":netoVal})
+            return jsonify({"id": resID, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto": netoVal})
     # if all the checks pass, start recording data
     conn = connection.get_connection()
     cur = conn.cursor()
 
-    # להכניס לתוך הטבלה
-
-    # generate a unique weight id לשנות את הקוד להשתמש ומזהה דיפולטיבי
-    # cur = conn.cursor()
-    # query = "SELECT MAX(id) AS max_id FROM transactions"
-    # cur.execute(query)
-    # row = cur.fetchone()
-    # cur.close()
-    # conn.close()
-    # if row[0] is None:
-    #     transaction_id = 1
-    # else:
-    #     max_id = row[0]
-    #     max_id_int = int(max_id) + 1
-    #     transaction_id = max_id_int
-
-    # add data to the DB
-    # direction, truck, containers, weight, unit, force, produce
-
     # return
     if direction == "in":
-        # outquery = "SELECT direction FROM transactions WHERE truck is %s", (
-        #     truck)
         conn = connection.get_connection()
         cur = conn.cursor()
-        # cur.execute(outquery)
-        # if cur.fetchone() == :
-        #     pass
         query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{weight}')"
         # Add a containers after the truck
         cur.execute(query)
@@ -230,10 +207,8 @@ def transaction_post():
         transaction_id = cur.fetchone()[0]
         cur.close()
         conn.close()
-        #my_id = transaction_id[0]
         return jsonify({"id": transaction_id, "truck": truck, "bruto": weight})
-    # and isIn(truck,direction)==False############################:
-    # and isIn(truck, direction) == False:  # Force ##### Gives error when trying to update an IN transaction
+
     elif direction == "out":
         conn = connection.get_connection()
         cur = conn.cursor()
@@ -245,7 +220,6 @@ def transaction_post():
         truckTaraVal = weight  # Weight of truck
         conn = connection.get_connection()
         cur = conn.cursor()
-        # <(SELECT MAX(id) AS max_id FROM transactions)"
         query = f"SELECT bruto FROM transactions where truck='{truck}' and direction='in'"
         cur.execute(query)
         # total_weight query gives a Type Error when 2 OUT's in a row without a force - instead of a customized error message
@@ -256,10 +230,10 @@ def transaction_post():
             return "Error"
         total_weight = total_weight[0]
         if notForCalc:
-            netoVal="na"
+            netoVal = "na"
         else:
-            netoVal = total_weight - total_weight_containers - truckTaraVal
-            netoVal=round(netoVal, 2)
+            netoVal = total_weight-total_weight_containers - truckTaraVal
+            netoVal = round(netoVal, 2)
         conn = connection.get_connection()
         cur = conn.cursor()
         query = f"UPDATE transactions SET direction='{direction}', truckTara='{truckTaraVal}', neto='{netoVal}' WHERE truck='{truck}' AND id='{resID}'"
@@ -275,21 +249,27 @@ def transaction_post():
         cur.close()
         conn.close()
         my_id = transaction_id[0]
-        return jsonify({"id": my_id, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto":netoVal})
+        return jsonify({"id": my_id, "truck": truck, "bruto": total_weight, "truckTara": truckTaraVal, "neto": netoVal})
         # return jsonify(transaction_id[0])
     elif direction == "none":
         conn = connection.get_connection()
         cur = conn.cursor()
-        querylastin = f"SELECT max(id) FROM transaction where truck='{truck}' and direction='in'"
+        querylastin = f"SELECT id, direction FROM transactions WHERE direction = 'in' ORDER BY id DESC LIMIT 1"
         cur.execute(querylastin)
-        lastIN = cur.fetchone()
-        if lastIN is not None:
-            return "There's a transaction where truck is heading in, no 'none' direction transaction can be proccessed"
-        query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{weight}')"
-        cur.execute(query)
-        conn.commit()
+        lastID = cur.fetchone()
         cur.close()
         conn.close()
+        try:
+            if lastID[1] == "in":
+                return "There's a transaction where truck is heading in, no 'none' direction transaction can be proccessed"
+        except:
+            conn = connection.get_connection()
+            cur = conn.cursor()
+            query = f"INSERT INTO transactions (direction,datetime, truck,produce,containers,bruto) VALUES ('{direction}', '{timestamp}', '{truck}', '{produce}','{containers}','{weight}')"
+            cur.execute(query)
+            conn.commit()
+            cur.close()
+            conn.close()
         conn = connection.get_connection()
         cur = conn.cursor()
         cur.execute(f"SELECT max(id) FROM transactions where truck='{truck}'")
@@ -298,7 +278,7 @@ def transaction_post():
         conn.close()
         return jsonify({"id": transaction_id, "truck": truck, "bruto": weight})
     else:
-        return "ERROR", 404
+        return "ERROR"
         ####################################################################################
 
 
@@ -309,7 +289,7 @@ def batchWeight_post():
     passw = request.form.get("password")
     fext = os.path.splitext(filename)[1]#.csv#.json#
     if passw != 'root':
-        return "\nWrong Password\n"
+        return "Wrong Password"
     F="./in/"+filename
     try:
         FirstCsv=True
@@ -352,38 +332,6 @@ def batchWeight_post():
             connection.execute_commit(f"UPDATE containers_registered SET weight = '{inserting[1]}', unit = '{unit}' WHERE container_id = '{inserting[0]}'")
 
     return filename+" uploaded successfully"
-       
-        
-    
-
-
-
-
-    # conn = connection.get_connection()
-    # cur = conn.cursor()
-    # allCID = cur.execute('SELECT container_id FROM containers_registered')
-    # cur.execute('SELECT container_id FROM containers_registered')
-    # res=cur.fetchall()#why we not use in res
-    # cur.close()
-    # conn.close()
-    #print(allCID)   #fo tstin
-    # allCID = [i[0] for i in allCID]#what is allCID
-    # for i in valist:
-    #     if i[0] in allCID :
-    #         conn = connection.get_connection()
-    #         cur = conn.cursor()
-    #         cur.execute(f"UPDATE containers_registered SET weight = {int(i[1])}, unit = '{unit}' WHERE container_id = '{i[0]}'")
-    #         res=cur.fetchall()#########################
-    #         cur.close()
-    #         conn.close()
-    #     else:
-    #         conn = connection.get_connection()
-    #         cur = conn.cursor()
-    #         cur.execute(f"INSERT INTO containers_registered (container_id,weight,unit) VALUES ('{i[0]}',{int(i[1])}, '{unit}')")
-    #         res=cur.fetchall()#################################
-    #         cur.close()
-    #         conn.close()
-    # return valist
 
 
 # GET /unknown (called by admin)
@@ -551,8 +499,10 @@ def item_id(id):
             Tara="na"        
        
         return jsonify({"id":item_id,"instance":"truck","tara":Tara,"sessions":listRes})
+
+
     #### for containers
-    
+
     else:
         ListofTuple=connection.fetchone(f"SELECT * FROM containers_registered WHERE container_id = '{item_id}'")  
       
@@ -629,6 +579,7 @@ def health():
     else :
         print(status)
         return jsonify(status)
+
 
 if __name__ == "__main__":
     app_w.run(host="0.0.0.0", debug=True)

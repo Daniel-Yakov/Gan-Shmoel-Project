@@ -64,6 +64,7 @@ def db_health_check():
         with get_connection().cursor() as cursor:
             sql = "select 1"
             cursor.execute(sql)
+            
         return True
     except Exception:
         return False
