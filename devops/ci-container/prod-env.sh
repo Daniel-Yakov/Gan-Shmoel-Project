@@ -15,3 +15,5 @@ docker-compose -f ./billing/docker-compose-b-prod.yml -p prod down
 docker-compose -f ./weight/docker-compose-w-prod.yml -p prod up -d
 docker-compose -f ./billing/docker-compose-b-prod.yml -p prod up -d
 
+rm ./weight/docker-compose-w-prod.yml ./billing/docker-compose-b-prod.yml
+
