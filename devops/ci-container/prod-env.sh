@@ -16,4 +16,4 @@ docker-compose -f ./weight/docker-compose-w-test.yml -p prod up -d --build
 docker-compose -f ./billing/docker-compose-b-test.yml -p prod up -d --build
 
 # rm ./weight/docker-compose-w-prod.yml ./billing/docker-compose-b-prod.yml
-rm -f ./weight/docker-compose-w-test.yml ./billing/docker-compose-b-test.yml
+# rm -f ./weight/docker-compose-w-test.yml ./billing/docker-compose-b-test.yml
