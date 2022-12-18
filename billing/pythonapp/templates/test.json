@@ -43,7 +43,7 @@
         "bruto": 12,
         "containers": ["5"],
         "direction": "out",
-        "id": 97654,
+        "id": 10004,
         "neto": 0,
         "produce": "orange"
     },
@@ -51,8 +51,65 @@
         "bruto": 12,
         "containers": ["5"],
         "direction": "out",
-        "id": 65456,
+        "id": 10004,
         "neto": 0,
         "produce": "orange"
+    },
+    {
+        "bruto": 8,
+        "containers": ["2"],
+        "direction": "out",
+        "id": 10002,
+        "neto": 0,
+        "produce": "apple"
+    },
+    {
+        "bruto": 15,
+        "containers": ["6"],
+        "direction": "out",
+        "id": 10003,
+        "neto": 0,
+        "produce": "apple"
+    },
+    {
+        "bruto": 7,
+        "containers": ["2"],
+        "direction": "out",
+        "id": 10003,
+        "neto": 0,
+        "produce": "orange"
+    },
+    {
+        "bruto": 13,
+        "containers": ["5"],
+        "direction": "out",
+        "id": 10002,
+        "neto": 0,
+        "produce": "banana"
+    },
+    {
+        "bruto": 10,
+        "containers": ["3"],
+        "direction": "out",
+        "id": 10003,
+        "neto": 0,
+        "produce": "orange"
+    },
+    {
+        "bruto": 12,
+        "containers": ["5"],
+        "direction": "out",
+        "id": 10002,
+        "neto": 0,
+        "produce": "orange"
+    },
+    {
+        "bruto": 11,
+        "containers": ["4"],
+        "direction": "out",
+        "id": 10004,
+        "neto": 0,
+        "produce": "banana"
     }
+
 ]
