@@ -9,7 +9,7 @@ docker-compose -f ./weight/docker-compose-w-test.yml -p prod down
 docker-compose -f ./billing/docker-compose-b-test.yml -p prod down
 
 # create new prod contianers
-docker-compose -f ./weight/docker-compose-w-test.yml -p prod up -d --build
-docker-compose -f ./billing/docker-compose-b-test.yml -p prod up -d --build
+docker-compose -f ./weight/docker-compose-w-test.yml -p prod up -d
+docker-compose -f ./billing/docker-compose-b-test.yml -p prod up -d
 
 rm -rf ./weight/docker-compose-w-test.yml ./billing/docker-compose-b-test.yml
